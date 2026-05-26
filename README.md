@@ -18,6 +18,7 @@ $Weights = Get-Weights -Mode Third -clip $book
 - If the MD file is well-structured into sentences, then it can be parsed directly. If it's free-form notes with one per line, -join " EOL " to help out the parser. (EOL ends the sentence, then gets replaced with a dot (`.`))
 - This step might take several minutes, as Third Mode has to make 3 runs through the corpus, mostly to build the Merkel tree. 
 
+Or multiple files at once:
 ```
 $Weights = Get-Weights -Mode Third -clip (($chill -join " EOL ") + ($isms -join " EOL ") + $book)
 ```
@@ -47,7 +48,7 @@ $Weights = Get-Weights -Mode Third -clip $codefile
 - Get-Weights tokenizes input with Get-Tokenizer before building a Merkle table ($Weights) for the word list. 
   - "Both" mode uses 1-dimensional look-ahead, while "Third" mode uses 2-dimensional look-ahead. More accurate prediction but weight iteration (aka "training") takes longer.
 - Get-PredictWord takes one or two words as input, plus the Merkle table, and returns the next word in the table by random selection. 
-  - It works basically by choosing words from a D&D dice table. 0-1 = "this", 2-4 = "that", 5-6 = "time" on a D6. 
+  - It works basically by choosing words from a D&D dice table. 0-1 = "this", 2-5 = "that", 6-7= "time" on a D8. 
 - Get-Sentence and Get-ThirdSentence set up and iterate Get-PredictWord until the "EOL" word is found. 
   - Sentence gets detokenized. 
   - EOL gets replaced with a dot, and the first letter of the sentence captialized. 
