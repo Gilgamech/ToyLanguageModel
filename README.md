@@ -11,11 +11,13 @@ $chill = gc "C:\Files\ChillSMP.txt"
 ```
 
 2. Train weights:
-````
+```
 $Weights = Get-Weights -Mode Third -clip $book
 ```
+
 - If the MD file is well-structured into sentences, then it can be parsed directly. If it's free-form notes with one per line, -join " EOL " to help out the parser. (EOL ends the sentence, then gets replaced with a dot (`.`))
 - This step might take several minutes, as Third Mode has to make 3 runs through the corpus, mostly to build the Merkel tree. 
+
 ```
 $Weights = Get-Weights -Mode Third -clip (($chill -join " EOL ") + ($isms -join " EOL ") + $book)
 ```
@@ -24,7 +26,9 @@ $Weights = Get-Weights -Mode Third -clip (($chill -join " EOL ") + ($isms -join 
 ```
 Get-ThirdSentence -Weights $Weights
 ```
+
 Or loop for multiple sentences:
+
 ```
 1..25 |%{Get-ThirdSentence -Weights $Weights}
 ```
@@ -36,6 +40,7 @@ $codefile = gc "C:\Files\PSFile.ps1"
 $Weights = Get-Weights -Mode Third -clip $codefile
 1..25 |%{Get-ThirdSentence -Weights $Weights}
 ```
+
 (Only tested with PS1 files.)
 
 5. How it works:
