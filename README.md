@@ -7,7 +7,6 @@ A tiny answer system. Expect hallucinations. Eventually meant to be similar to a
 ```
 Get-Setup -Book "C:\Files\OffgridOffice.md" -Notes1 "C:\Files\Gillogisms.md" -Notes2 "C:\Files\ChillSMP.txt"
 ```
-
 - Currently hardcoded to 1 "book" type, and 2 "notes" type files. 
 - "book" type has well-defined sentences in paragraphs, with good punctuation and capitalization.
 - "notes" type has  loosely-defined sentences, with ideas frequently on their own lines. Mixed with regular sentences and full paragraphs. 
@@ -16,6 +15,7 @@ Get-Setup -Book "C:\Files\OffgridOffice.md" -Notes1 "C:\Files\Gillogisms.md" -No
 ```
 $dataVar.keys
 ```
+- Prepend with "What is " to turn the key into a question, for the next step.
 
 3. Ask it a question:
 ```
