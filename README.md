@@ -1,66 +1,52 @@
 # Toy Language Model.
 
-A tiny autosuggest system. Eventually meant to be similar to an AI LLM. 
+A tiny answer system. Expect hallucinations. Eventually meant to be similar to an AI LLM. 
 
-## Instructions:
-1. Import text files for training: 
+## Directions:
+1. Run automated weight training program: 
 ```
-$book = gc "C:\Files\OffgridOffice.md"
-$isms = gc "C:\Files\Gillogisms.md"
-$chill = gc "C:\Files\ChillSMP.txt"
+Get-Setup -Book "C:\Files\OffgridOffice.md" -Notes1 "C:\Files\Gillogisms.md" -Notes2 "C:\Files\ChillSMP.txt"
 ```
 
-2. Train weights:
-```
-$Weights = Get-Weights -Mode Third -clip $book
-```
+- Currently hardcoded to 1 "book" type, and 2 "notes" type files. 
+- "book" type has well-defined sentences in paragraphs, with good punctuation and capitalization.
+- "notes" type has  loosely-defined sentences, with ideas frequently on their own lines. Mixed with regular sentences and full paragraphs. 
 
-- If the MD file is well-structured into sentences, then it can be parsed directly. If it's free-form notes with one per line, -join " EOL " to help out the parser. (EOL ends the sentence, then gets replaced with a dot (`.`))
-- This step might take several minutes, as Third Mode has to make 3 runs through the corpus, mostly to build the Merkel tree. 
-
-Or multiple files at once:
+2. Review available prompts: 
 ```
-$Weights = Get-Weights -Mode Third -clip (($chill -join " EOL ") + ($isms -join " EOL ") + $book)
+$dataVar.keys
 ```
 
-3. Run: 
+3. Ask it a question:
 ```
-Get-ThirdSentence -Weights $Weights
-```
-
-Or loop for multiple sentences:
-
-```
-1..25 |%{Get-ThirdSentence -Weights $Weights}
+Get-Answer "What is The day use area?"
 ```
 
-4. Try out "code mode":
+4. Try out the built-in MCP function - WA State's weather:
 ```
-$WeightMode = "Code"
-$codefile = gc "C:\Files\PSFile.ps1"
-$Weights = Get-Weights -Mode Third -clip $codefile
-1..25 |%{Get-ThirdSentence -Weights $Weights}
+Get-Answer "What is the weather?"
 ```
 
-(Only tested with PS1 files.)
+5. Adding an MCP function:
+- This is not actually an MCP server. The function is a normal PowerShell function. Using same terminology here because the functoin servers the same purpose.
+- Add one by finding the below line in Get-Setup and copying it a line below. Then, replace "the weather" with the question you want to trigger your function. And replace "Get-Weather" with the name of your function. 
+```
+	$dataVar."the weather" = "zzMCPFunction Get-Weather"
+```
+Be sure to test your function independently of this system, to make sure it works on its own. 
 
-5. How it works:
-- Get-Weights tokenizes input with Get-Tokenizer before building a Merkle table ($Weights) for the word list. 
-  - "Both" mode uses 1-dimensional look-ahead, while "Third" mode uses 2-dimensional look-ahead. More accurate prediction but weight iteration (aka "training") takes longer.
-- Get-PredictWord takes one or two words as input, plus the Merkle table, and returns the next word in the table by random selection. 
-  - It works basically by choosing words from a D&D dice table. 0-1 = "this", 2-5 = "that", 6-7= "time" on a D8. 
-- Get-Sentence and Get-ThirdSentence set up and iterate Get-PredictWord until the "EOL" word is found. 
-  - Sentence gets detokenized. 
-  - EOL gets replaced with a dot, and the first letter of the sentence captialized. 
-
-6. Check out the first iteration:
-````
-$Weights = Get-Weights -Mode Both -clip $book
-1..25 |%{Get-Sentence -Weights $Weights}
-````
-
-Get-Weights has 2 main modes, assembled from 4 total modes:
-- Init - Creates the first layer of Merkle tree. Used by "Both" and "Third".
-- Write - Writes values to the first layer of Merke tree. Used by "Both".
-- ThirdI - (Third Init) Creates the second layer of Merkle tree. Used by "Third".
-- ThirdW - (Third Writ) Writes values to the second layer of Merke tree. Used by "Third".
+6. Sample queries for my training data: 
+Get-Answer "What is along US-97?"
+Get-Answer "What is Any bear may have?"
+Get-Answer "What is their westbound route?"
+Get-Answer "What is As though it had?"
+Get-Answer "What is Next door to the park?"
+Get-Answer "What is a bit awkward?"
+Get-Answer "What is Tokeland could also have?"
+Get-Answer "What is The housing would then?"
+Get-Answer "What is While the orange tent?"
+Get-Answer "What is Most of the park?"
+Get-Answer "What is To check if the panel?"
+Get-Answer "What is Like how holiday music?"
+Get-Answer "What is One of the garages?"
+Get-Answer "What is The day use area?"
