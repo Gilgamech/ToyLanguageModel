@@ -1,9 +1,13 @@
 #Copyright 2026 Gilgamech Technologies
 #Author: Stephen Gillie
 #Created 5/15/2026
-#Updated 6/10/2026
+#Updated 8/17/2026
 #Notes:
-#v1.1 Added rudiumentary NLP, and a knowledge engine to inspire generation. 
+#v2.0 - Introducing the Satin Attention system. Because N 1-dimensional vectors in N-vector space is equal to one N-dimensional vector. And while the latter are frequently represented as floating point numbers, the one vector can be represented as a single integer in the N-dimensional corpus-space. 
+#v1.2 - Vastly improved generation system.
+#v1.1 - Added rudiumentary NLP, and a knowledge engine to inspire generation. 
+
+#Pre-edit: Many notes and some functions might be irrelevant and/or ready for depreciation. 
 
 # Natural Language Processing (NLP): Decodes human inputs. NLP breaks down text or speech into structured data so the system can analyze intent, tone, and meaning.
 # Natural Language Understanding (NLU): Identifies what the user actually wants. NLU maps intent onto existing functions, extracts key details, and carries context into the response.
@@ -23,16 +27,77 @@
 #Concepts as low-entropy word connections suzrrounded by high entropy word connections. And the relationship between them is described by any connecting words. 
 #One of the valuable products here would be 
 
+#The more often a word repeats, the more probabilstic should become the choice. Based on its loudness, so words with more options become probabilstic faster.
 
 
 <#
+#Decode Transformer - On each word, have a list of properties. 
+#Such as "fat" could have type = noun, root = odor, tone = negative, quantity = -5. 
+#And so combining the properties of the each word in the sentence would give you the properties of the sentence. 
+#"Your cat is fat" could have "person = second, tense = present, verbRoot = be, object = cat, objectType = pet, tone = slightly negative, quantity = large", 
+#Have 5 to -5 scale for tone, quantity, certainty, informativity, connotation, 
+#Also track negation, emotion, 
+#Filter next word based on object match
+
+#Adjectives give tone, quantity, 
+#Nouns give object and objectType
+#Verbs give person and tense
+#More syllables are generally more preferrable. 
+
+
 Get caps words from input, put in other list. 
 Identifying important words is as much how many are pointing to it as how many it's pointing to. 
 n't - negation
 Feel - certainty
+
+Connotation Examples
+Denotation,Negative Connotation,Neutral Connotation,Positive Connotation
+A smell,Stench,Scent,Aroma
+Loud music,Rabble,Music,Beats
+A muscular person,Brutish,Muscular,Strong
+A confident person,Arrogant,Self-assured,Confident
+Rich people,The 1%,Wealthy,Self-Made
+Someone who saves money,Stingy,Frugal,Thrifty
+A failing student,Stupid,Failing,Uninspired
+A young dog,Mutt,Dog,Puppy!
+Cold weather,Freezing,Cold,Cozy
+An argument,Clash,Disagreement,Debate
+Boss giving commands,Bossy,Assertive,Leader
+Apolitical people,Ignorant,Uninterested,Nonaligned
+A popular person,Socialite,Friend,
+An introvert,Hostile,Quiet,Self-sufficient
+Space,Confinement,Area,Landscape
+A person who’s happy with their achievements,Smug,Pleased,Proud
+Smart person,Nerd,Smart,Genius
+Good student,Teacher’s pet,Studious,Superstar
+Used Car,Rust bucket,Used,Pre-loved
+Young Adults,Brat,Adolescent,Youthful
+A well-organized person,Control freak,Organized,Prepared
+
+Positive Connotations
+    Helpful – This word has positive connotations of someone who is always giving their time. Another person may see a ‘helpful’ person as ‘a people pleaser’ which is a negative way to frame it.
+    Amazing – This word suggests that the person is very impressive or even surprisingly so!
+    Self-Confident – This word has positive connotations of assurance and belief in oneself. If you called the same person ‘arrogant’, then you’ll be framing them more negatively.
+    Caring – This word suggests that the person is kind and concerned for others. Generally, we think of a caring person positively.
+
+Negative Connotations:
+    Lazy – This word has negative connotations of someone being unproductive and unmotivated. That person might think this negative connotation is unfair and would describe themselves as just ‘tired’ or ‘unmotivated’.
+    Stupid – This word has negative connotations of someone being unintelligent or lacking common sense. A more positive word for this person might be ‘street smart, not academic’ or ‘struggling with school’.
+
+Neutral Connotations:
+    Disinterested – A person who is disinterested might be framed more negatively (“They’re a boring person!”) or positively (“The class is just not stimulating!”). Or, you can stay objective and just say that they’re disinterested.
+    Baby – If you don’t like babies, you might call them ‘brats’; if you like them, you might call them ‘Cherubs’, but if you don’t want to provide a connotation, y
 #>
 
+#Start with an object, which has a list of properties. Now, take the random words from the weight set, and somehow find those whose attributes align with any of the properites, and return only those. Or those with no correllation at all? (How to separate particles etc?) Yes, return those with either matching (similar) properties or no match at all, don't return mismatches. Such as "My red car" -> Properties include "red", "vehicle" and "mine". So colors like "blue" and "green" would be rejected, while pink or maroon might be allowed. Verbs such as "studying" or "gaming" wouldn't be allowed, but "driving" and maybe even "eating" would be allowed. Conjugation tense would be in the first person. 
+#Get adjacent words, or words across an equality verb. (i.e. red car = red) Get that word's type, (red = color) and that type becomes the attribute name on the object. (car.color = red). Now, searching for "car" will bring back red items, green items, and blue items, but not brown or orange items. 
+#This requires defining i.e. a color wheel.
+
 <# Wisdom:
+Battle violets liked my car.
+i'd only embraced cooking from scratch throughout the offgrid office
+
+
 How workers are able to endure months or years in a frictionless sociological vacuum.
 Go wash your hands before eating.
 Memories are recordings of acoustic musicians.
@@ -49,8 +114,9 @@ Fireworks out over a motorcycle-sized petit fours.
 Lung cells create a 35 foot by 2 foot by 10 foot open-air hotel
 The car was showing "Maintenace required" for more food.
 Descartes didn't just say 'i think therefore I am'-across 40 pages,  he wrote all of Hoquiam,  at 30 mph.
-Healthy was was happy was part of my personal maxims.
-A few seemed to was using the choice of 'this one' and 'the everything else one'.
+Healthy was happy was part of my personal maxims.
+A few seemed to be using the choice of 'this one' and 'the everything else one'.
+I am out of names and scraping the bottom of the Congo
 
 
 I guessed that she was Van camping as part of the humans working with the amazing geography of north america.
@@ -75,6 +141,32 @@ Auto-add caps words to caps file.
 #>
 
 #Double-quote, parenthesis, etc counter.
+
+<#
+Use "word association scalar" to pick next word. 
+- Each word gets a unique number. Goal is they end up being sequential within sentences and otherwise random. 
+- Next word is the one with the closest scalar.
+- "Loudness" of scalar is minima biased, in weighing based on number of possible next words.
+- Prev words are only used for guidance. scalar weights are ranked for loudness, and will iterate through these for distance.
+- Can't be longer than the sentence start and maybe 30.
+- Scalar collisions don't matter because they're not used for indexing, just association. 
+
+Need guidance-inflection-prediction word choosing system.
+
+Multi headed attention might mean to not only feed the prompt into generation, but every iteration, and have a "word test" to throw out the bad ones.
+- There would be a "sentence table" of indices and their loudnesses. And each new word would restack the list. 
+Homophone Disambiguation would be handled by the prev word guidance. 
+
+Start with a multiplier like 100x larger than the corpus. 
+Initialize each unique word's scalar a multiplier apart, so that the first word would be 100, second 200, etc. Enough to create some space between concepts. 
+Iterate through each sentence, and increment or decriment each word's scalar until they're in order and within 10 apart. (Like 1/10 of the multiplier.)
+
+Generation would be prompt-seeded, then pick next words based on distance from the query terms divided by their "Loudness". 
+
+
+Using an array of values allows for multiple meanings to be defined. Where you're only looking for a match with one vector, not all of them. 
+#>
+
 
 <# Directions:
 1. Run automated weight training program: 
@@ -147,48 +239,67 @@ $enum.RegexChars = '([^a-zA-Z\d\s])'
 $enum.RegexChars2 = ' ([^a-zA-Z\d\s]) '
 $enum.RegexReplace = ' $1 '
 $enum.RegexReplace2 = '$1'
-$enum.EOL1 = " EOL "
-$enum.EOL2 = " EOL "
-$enum.EOL3 = "EOL"
-$enum.EOL4 = " EOL"
+$enum.EOS1 = " EOS "
+$enum.EOS2 = " EOS "
+$enum.EOS3 = "EOS"
+$enum.EOS4 = " EOS"
 $enum.LF = "`n"
 $enum.LFReplace = " zzLF "
 
 #PowerShell reserved words.
-$rEnum = @{}
-$rEnum.aCount = "count"
-$rEnum.aKeys = "keys"
-$rEnum.aName = "name"
-$rEnum.aReturn = "Return"
-$rEnum.aValue = "value"
-$rEnum.aAdd = "add"
-$rEnum.aClear = "clear"
-$rEnum.aContains = "contains"
-$rEnum.aEquals = "equals"
-$rEnum.aItem = "item"
-$rEnum.aRemove = "remove"
-$rEnum.aSecond = "Second"
-$rEnum.aGetenumerator = "getenumerator"
-$rEnum.aGettype = "gettype"
-$rEnum.aPropert = "propert"
-$rEnum.aPsobject = "psobject"
-$rEnum.aTostring = "tostring"
+$ReservedEnum = @{}
+$ReservedEnum.aCall = "call"
+$ReservedEnum.aCount = "count"
+$ReservedEnum.aKeys = "keys"
+$ReservedEnum.aName = "name"
+$ReservedEnum.aReturn = "Return"
+$ReservedEnum.aValue = "value"
+$ReservedEnum.aAdd = "add"
+$ReservedEnum.aClear = "clear"
+$ReservedEnum.aContains = "contains"
+$ReservedEnum.aEquals = "equals"
+$ReservedEnum.aItem = "item"
+$ReservedEnum.aRemove = "remove"
+$ReservedEnum.aSecond = "Second"
+$ReservedEnum.aGetenumerator = "getenumerator"
+$ReservedEnum.aGettype = "gettype"
+$ReservedEnum.aPropert = "propert"
+$ReservedEnum.aPsobject = "psobject"
+$ReservedEnum.aTostring = "tostring"
+
+$PunctuationEnum = @{}
+$PunctuationEnum.aComma = ","
+$PunctuationEnum.aSingleQuote = "'"
+$PunctuationEnum.aDoubleQuote = '"'
+$PunctuationEnum.aSingleQuote = "'"
+$PunctuationEnum.aSaint = "st[.]"
+$PunctuationEnum.aHyphen = "-"
+$PunctuationEnum.aOpeningParens = "\("
+$PunctuationEnum.aClosingParens = "\)"
+$PunctuationEnum.aOpeningSquare = "\["
+$PunctuationEnum.aClosingSquare = "\]"
+$PunctuationEnum.aOpeningCurly = "\{"
+$PunctuationEnum.aClosingCurly = "\}"
+$PunctuationEnum.aCaret = "``"
+$PunctuationEnum.aQuestionMark = "\?"
+$PunctuationEnum.aDollarSign = "`$"
 
 #Caps words
-$cenum = @{}
-$cenum.seattle = "Seattle"
-$cenum.richland = "Richland"
-$cenum.aberdeen = "Aberdeen"
-$cenum.wa = "WA"
-$cenum.grayland = "Grayland"
-$cenum.toppenish = "Toppenish"
-$cenum.canad = "Canad" # Canada, Canadian, et cetera
-$cenum.urizane = "Urizane" # Watermelon Man
-$cenum."battle violets"= "Battle Violets"
+$CapsEnum = @{}
+$CapsEnum.seattle = "Seattle"
+$CapsEnum.richland = "Richland"
+$CapsEnum.aberdeen = "Aberdeen"
+$CapsEnum.wa = "WA"
+$CapsEnum.grayland = "Grayland"
+$CapsEnum.toppenish = "Toppenish"
+$CapsEnum.canad = "Canad" # Canada, Canadian, et cetera
+$CapsEnum.urizane = "Urizane" # Watermelon Man
+$CapsEnum."battle violets"= "Battle Violets"
 
 #Prevent clobbering when reloading, but still init on first run.
  if (!($WeightMode)) {[ValidateSet("Text","Code")][string]$WeightMode = "Text"}
  if (!($dataVar)) {$dataVar = @{}}
+ if (!($IdeaIndex)) {$IdeaIndex = @{}}
  if (!($weights)) {$weights = @{}}
 #endregion
 
@@ -198,25 +309,26 @@ Function Get-Tokenizer {
 		[switch]$Debug
 	); #end Param
 	$clip = $clip -replace "\\",$enum.Backslash
+	$PunctuationEnum.keys  | %{$clip = $clip -replace $PunctuationEnum.($_)," $_ "}
 
 	if ($WeightMode -eq "Text") {
 		# $clip = $clip -replace $enum.RegexChars,$enum.RegexReplace
-		$clip = $clip -replace $enum.dot,$enum.EOL1
+		$clip = $clip -replace $enum.dot,$enum.EOS1
 		$clip = $clip.ToLower();
 	} else {
 		# $clip = $clip -replace "`t"," zzTab "
 		$clip = $clip -replace "`t",""
 		# $clip = $clip -replace $enum.hyphen,$enum.hyphenReplace  
 		$clip = $clip -replace $enum.dot,$enum.dotReplace
-		$clip = $clip -replace $enum.semicolon,$enum.EOL1
-		# $clip = $clip -replace $enum.tab,$enum.EOL1
+		$clip = $clip -replace $enum.semicolon,$enum.EOS1
+		# $clip = $clip -replace $enum.tab,$enum.EOS1
 		# # $clip = $clip -replace $enum.RegexChars,$enum.RegexReplace
-		# $clip = $clip -replace $enum.LF,$enum.EOL2
+		# $clip = $clip -replace $enum.LF,$enum.EOS2
 	}
 	$clip = $clip -split $enum.space
 	$clip = $clip | where {$_}
 
-	$renum.keys  | %{$clip = $clip -replace $renum.($_),$_}
+	$ReservedEnum.keys  | %{$clip = $clip -replace $ReservedEnum.($_),$_}
 	Return $clip
 }; #end GetTokenizer
 
@@ -226,27 +338,29 @@ Function Get-Detokenizer {
 		[switch]$Debug
 	); #end Param
 	#PowerShell reserved words.
-	$renum.keys  | %{$clip = $clip -replace $_, $renum.($_) };
+	$ReservedEnum.keys  | %{$clip = $clip -replace $_, $ReservedEnum.($_) };
 	if ($WeightMode -eq "Text") {
-		$renum.keys  | %{$clip = $clip -replace $_, $cenum.($_) };
-		$clip = $clip -replace ",",", "
-		$clip = $clip -replace "\("," ("
-		$clip = $clip -replace "\)",") "
-		$clip = $clip -replace "\?","? "
-		$clip = $clip -replace "%","% "
-		$clip = $clip -replace " i "," I "
-		$clip = $clip -replace " us-"," US-"
-		$clip = $clip -replace " wa-"," WA-"
+		$ReservedEnum.keys  | %{$clip = $clip -replace $_, $CapsEnum.($_) };
 		$clip = $clip -replace $enum.RegexChars2,$enum.RegexReplace2
-		$clip = $clip -replace $enum.EOL2,"." 
+		$clip = $clip -replace $enum.EOS2,"." 
 	} else {
 		$clip = $clip -replace $enum.RegexChars2,$enum.RegexReplace2
-		$clip = $clip -replace $enum.EOL3,$enum.semicolon2
+		$clip = $clip -replace $enum.EOS3,$enum.semicolon2
 		$clip = $clip -replace "zzTab",""
 		# $clip = $clip -replace $enum.hyphenReplace,"-"
 	}
 	$clip = $clip -replace $enum.dotReplace,"."
 	$clip = $clip -replace "zzLF",$enum.LF
+	$PunctuationEnum.keys  | %{$clip = $clip -replace " $_ ", $PunctuationEnum.($_) };
+	$PunctuationEnum.keys  | %{$clip = $clip -replace $_, $PunctuationEnum.($_) };
+	$clip = $clip -replace ",",", "
+	$clip = $clip -replace "\\\("," ("
+	$clip = $clip -replace "\\\)",") "
+	$clip = $clip -replace "\\\?","? "
+	$clip = $clip -replace "%","% "
+	$clip = $clip -replace " i "," I "
+	$clip = $clip -replace " us-"," US-"
+	$clip = $clip -replace " wa-"," WA-"
 	$clip = $clip -replace $enum.Backslash,"\"
 	Return $clip
 
@@ -255,14 +369,15 @@ Function Get-Detokenizer {
 Function Get-Weights {
 	Param(
 		$clip = $fb,
-		[ValidateSet("Both","Fourth","Init","Prev","PrevI","PrevW","Third","ThirdI","ThirdW","Trivet","TrivetI","TrivetW","Write")][string]$Mode = "Both",
-		$weights = @{},
+		[ValidateSet("Attn","Both","Fourth","Init","Prev","PrevI","PrevW","Satin","Strain","Third","ThirdI","ThirdW","Trivet","TrivetI","TrivetW","Write")][string]$Mode = "Both",
+		[hashtable]$weightArray = @{},
+		$Strain = 1,
 		[switch]$Debug
 	)	
-	$weights.zzLF = @{}
-	$weights.zzdotzz = @{}
-	$weights.zzbackslash = @{}
-	$weights.zzTab = @{}
+	$weightArray.zzLF = @{}
+	$weightArray.zzdotzz = @{}
+	$weightArray.zzbackslash = @{}
+	$weightArray.zzTab = @{}
 	# if ($WeightMode -eq "Text") {
 		# $clip = ($clip -join $enum.space)
 	# }
@@ -296,14 +411,87 @@ Function Get-Weights {
 # $w4 = $w3.clone()
 # foreach ($word in $w4.keys) {$w3.$word = $w4.clone()}
 
-	if ("Init Both Prev Third Trivet Fourth" -match $mode) {
+	if ("Init Both Attn Prev Third Trivet Fourth" -match $mode) {
 		for ($i=0; $i -le $UniqueLength; $i++) {
 			$currentItem = $Unique[$i];
 			# $next = $clip[$i+1];
 			# "$currentItem - $next"
-			$weights.($currentItem) = @{}
+			$weightArray.($currentItem) = @{}
 			$pc = $i / $UniqueLength * 100
-			Write-Progress -Activity "Initializing hash table" -Status "$pc percent complete: $currentItem" -PercentComplete $pc -CurrentOperation $weights.($currentItem) 
+			Write-Progress -Activity "Initializing hash table" -Status "$pc percent complete: $currentItem" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem) 
+		}
+	}
+	if ("Satin" -match $mode) {#short attn
+		$counter = 0
+		for ($i=0; $i -le $Length; $i++) {
+			$counter++
+			if ($currentItem -eq $Enum.EOS3) {
+				$counter += 100
+			}
+			$currentItem = $clip[$i];
+		try {
+			$weightArray.($currentItem) = $counter
+		} catch {
+				Write-Host "$Mode Error: This $currentItem Next $next"
+		}
+			$pc = $i / $Length * 100
+			Write-Progress -Activity "Writing hash table" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next)
+		}
+	}
+	if ("Strain" -match $mode) {
+		for ($i=0; $i -le $Length; $i++) {
+			$currentItem = $clip[$i];
+			$next = $clip[$i+1];
+			# $ClipStrain = $Strain * $clipcount
+			try {
+				$Loudness = $clipcount / $Weights.($currentItem).keys.count
+			} catch {
+				# write-host "pre $currentItem $($Weights.($currentItem).keys.count)"
+				$Loudness = .1
+			}
+			
+			if ($IdeaIndex.($currentItem) -lt $IdeaIndex.($next)) {
+				# $IdeaIndex.($currentItem) += $Strain * (Get-Loudness $currentItem).RelativeLoudness
+				# $IdeaIndex.($currentItem) +=  $ClipStrain / $Weights.($currentItem).keys.count
+				try {
+					[int]$IdeaIndex.($currentItem) +=  ($Strain / $Loudness)
+					# [int]$IdeaIndex.($currentItem) +=  $Strain
+				} catch {
+					write-host "lp+ $currentItem $($Weights.($currentItem).keys.count)"
+				}
+				# $IdeaIndex.($next) -= $Strain
+			} elseif ($IdeaIndex.($currentItem) -gt $IdeaIndex.($next)) {
+				# $IdeaIndex.($currentItem) -= $Strain * (Get-Loudness $currentItem).RelativeLoudness
+				# $IdeaIndex.($currentItem) -= $ClipStrain / $Weights.($currentItem).keys.count
+				try {
+					# [int]$IdeaIndex.($currentItem) -=  $Strain
+					[int]$IdeaIndex.($currentItem) -=  ($Strain / $Loudness)
+				} catch {
+					write-host "lp- $currentItem $($Weights.($currentItem).keys.count)"
+				}
+				# $IdeaIndex.($next) += $Strain
+			} # end if val
+		
+			$pc = $i / $Length * 100
+			Write-Progress -Activity "Strain $Strain" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc 
+		}
+	}
+	if ("Attn" -match $mode) {
+		$counter = 0
+		for ($i=0; $i -le $Length; $i++) {
+			$counter++
+			if ($currentItem -eq $Enum.EOS3) {
+				$counter += 100
+			}
+			$currentItem = $clip[$i];
+			$next = $clip[$i+1]; # * $Loudness
+		try {
+			$weightArray.($currentItem).($next) += $counter
+		} catch {
+				Write-Host "$Mode Error: This $currentItem Next $next"
+		}
+			$pc = $i / $Length * 100
+			Write-Progress -Activity "Writing hash table" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next)
 		}
 	}
 	if ("Write Both" -match $mode) {
@@ -311,12 +499,12 @@ Function Get-Weights {
 			$currentItem = $clip[$i];
 			$next = $clip[$i+1];
 		try {
-			$weights.($currentItem).($next) += 1
+			$weightArray.($currentItem).($next) += 1
 		} catch {
-				Write-Host "$Mode Error: This $currentItem Next $prev"
+				Write-Host "$Mode Error: This $currentItem Next $next"
 		}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Writing hash table" -Status "$pc percent complete: $currentItem $prev" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($next)
+			Write-Progress -Activity "Writing hash table" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next)
 		}
 	}
 	if ("PrevW" -match $mode) {#uses Init for init
@@ -324,17 +512,17 @@ Function Get-Weights {
 			$currentItem = $clip[$i];
 			$prev = $clip[$i-1];
 			try {
-				$weights.($currentItem).($prev) += 1
+				$weightArray.($currentItem).($prev) += 1
 			} catch {
 				try {
-					$weights.($currentItem).($prev) = @{}
-					$weights.($currentItem).($prev) += 1
+					$weightArray.($currentItem).($prev) = @{}
+					$weightArray.($currentItem).($prev) += 1
 				} catch {
 					Write-Host "$Mode Error: This $currentItem Prev $prev"
 				}
 			}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Writing $Mode table" -Status "$pc percent complete: $currentItem $prev" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($prev)
+			Write-Progress -Activity "Writing $Mode table" -Status "$pc percent complete: $currentItem $prev" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($prev)
 		}
 	}
 	if ("TrivetI" -match $mode) {#Init for Prev for Third
@@ -343,12 +531,12 @@ Function Get-Weights {
 			$prev = $clip[$i-1];
 			# "$currentItem - $prev"
 			try {
-				$weights.($currentItem).($prev) = @{}
+				$weightArray.($currentItem).($prev) = @{}
 			} catch {
 				Write-Host "$Mode Error: This $currentItem Prev $prev"
 			}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Initializing $Mode table" -Status "$pc percent complete: $currentItem $prev" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($prev)
+			Write-Progress -Activity "Initializing $Mode table" -Status "$pc percent complete: $currentItem $prev" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($prev)
 		}
 	}
 	if ("TrivetW" -match $mode) {#Write for Prev for Third
@@ -358,12 +546,12 @@ Function Get-Weights {
 			$secondprev = $clip[$i - 2];
 			# "$currentItem - $prev"
 			try {
-				$weights.($currentItem).($prev).($secondprev) += 1
+				$weightArray.($currentItem).($prev).($secondprev) += 1
 			} catch {
 				Write-Host "$Mode Error: This $currentItem Next $next Second $second"
 			}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Writing $Mode table" -Status "$pc percent complete: $currentItem $prev" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($prev)
+			Write-Progress -Activity "Writing $Mode table" -Status "$pc percent complete: $currentItem $prev" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($prev)
 		}
 	}
 	if ("ThirdI Fourth" -match $mode) {
@@ -372,12 +560,12 @@ Function Get-Weights {
 			$next = $clip[$i+1];
 			# "$currentItem - $next"
 			try {
-				$weights.($currentItem).($next) = @{}
+				$weightArray.($currentItem).($next) = @{}
 			} catch {
 				Write-Host "$Mode Error: This $currentItem Next $next"
 			}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Initializing $Mode table" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($next)
+			Write-Progress -Activity "Initializing $Mode table" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next)
 		}
 	}
 	if ("ThirdW Fourth" -match $mode) {
@@ -386,26 +574,26 @@ Function Get-Weights {
 			$next = $clip[$i+1];
 			$second = $clip[$i+2];
 			# "$currentItem - $next"
-			# $weights.($currentItem).($next).("zzNumber") += 1#This will be the sum.
+			# $weightArray.($currentItem).($next).("zzNumber") += 1#This will be the sum.
 			try {
-				$weights.($currentItem).($next).($second) += 1
-				# $weights.($DataOne).($DataTwo).($DataThree).("EOL") -> DataOne.was.made.with.Datatwo -> DataTwo pieces of DataThree -> DataThree in just under DataFour.
-				# $weights.($DataOne).($DataTwo) -> DataOne.was.made.with.Datatwo
+				$weightArray.($currentItem).($next).($second) += 1
+				# $weightArray.($DataOne).($DataTwo).($DataThree).("EOS") -> DataOne.was.made.with.Datatwo -> DataTwo pieces of DataThree -> DataThree in just under DataFour.
+				# $weightArray.($DataOne).($DataTwo) -> DataOne.was.made.with.Datatwo
 			} catch {
 				Write-Host "$Mode Error: This $currentItem Next $next Second $second"
 			}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Writing $Mode table" -Status "$pc percent complete: $currentItem $next $second" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($next).($second)
+			Write-Progress -Activity "Writing $Mode table" -Status "$pc percent complete: $currentItem $next $second" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next).($second)
 		}
 	}
 	if ("FourthW" -match $mode) {
-		$weights = get-weights -Mode Init -clip $clip
+		$weightArray = get-weights -Mode Init -clip $clip
 		1..16|%{
-			Write-Progress -Activity "Writing $_ table" -Status "$pc percent complete: $currentItem $next $second" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($next).($second)
-			$weightsClone = $weights.Clone();
-			[array]$words = $weights.keys
+			Write-Progress -Activity "Writing $_ table" -Status "$pc percent complete: $currentItem $next $second" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next).($second)
+			$weightArrayClone = $weightArray.Clone();
+			[array]$words = $weightArray.keys
 			foreach ($word in $words) {
-				$weights[$word] = $weightsClone
+				$weightArray[$word] = $weightArrayClone
 			}
 		}
 		#$w.set.set.set.set.set.set.set.set.set.set.set.set.set.set.set.set
@@ -429,36 +617,221 @@ Function Get-Weights {
 			$fifteenth = $clip[$i+15];
 			$sixteenth = $clip[$i+16];
 			
-			# $weights.($currentItem).($next).("zzNumber") += 1#This will be the sum.
+			# $weightArray.($currentItem).($next).("zzNumber") += 1#This will be the sum.
 
 			try {
-				# $weights.($currentItem).zzNumber += 1
-				# $weights.($currentItem).($next).("zzNumber") += 1#This will be the sum.
-				# $weights.($currentItem).($next).zzNumber += 1
-				# $weights.($currentItem).($next).($third).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).zzNumber += 1
-				# $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).($fifteenth).zzNumber += 1
-				$weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).($fifteenth).($sixteenth) += 1
+				# $weightArray.($currentItem).zzNumber += 1
+				# $weightArray.($currentItem).($next).("zzNumber") += 1#This will be the sum.
+				# $weightArray.($currentItem).($next).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).zzNumber += 1
+				# $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).($fifteenth).zzNumber += 1
+				$weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).($fifteenth).($sixteenth) += 1
 				#$w.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).($fifteenth).($sixteenth)
 			} catch {
 				Write-Host "Fourth Error: $currentItem $next $third $fourth $fifth $sixth $seventh $eigth $ninth $tenth $eleventh $twelvth $thirteenth $fourteenth $fifteenth $sixteenth"
 			}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Writing Fourth table $i" -Status "$pc percent complete:  $currentItem $next $third $fourth $fifth $sixth $seventh $eigth $ninth $tenth $eleventh $twelvth $thirteenth $fourteenth $fifteenth $sixteenth" -PercentComplete $pc -CurrentOperation $weights.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).($fifteenth).($sixteenth)
+			Write-Progress -Activity "Writing Fourth table $i" -Status "$pc percent complete:  $currentItem $next $third $fourth $fifth $sixth $seventh $eigth $ninth $tenth $eleventh $twelvth $thirteenth $fourteenth $fifteenth $sixteenth" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next).($third).($fourth).($fifth).($sixth).($seventh).($eigth).($ninth).($tenth).($eleventh).($twelvth).($thirteenth).($fourteenth).($fifteenth).($sixteenth)
 		}
 	}
-	Return $Weights
+	Return $weightArray
 }
+
+#Divide move amount by loudness, so those with just 1 following word don't move. 
+
+$PSColors = @{}
+# $PSColors.Black = "Black"
+# $PSColors.DarkBlue = "DarkBlue"
+$PSColors.DarkGreen = "DarkGreen"
+$PSColors.DarkCyan = "DarkCyan"
+$PSColors.DarkCyan = "DarkRed"
+# $PSColors.DarkMagenta = "DarkMagenta"
+$PSColors.DarkYellow = "DarkYellow"
+$PSColors.Gray = "Gray"
+$PSColors.DarkGray = "DarkGray"
+$PSColors.Blue = "Blue"
+$PSColors.Green = "Green"
+$PSColors.Cyan = "Cyan"
+$PSColors.Red = "Red"
+$PSColors.Magenta = "Magenta"
+$PSColors.Yellow = "Yellow"
+$PSColors.White = "White"
+
+Function Get-BulkSatinStrain {
+	Param(
+		[string]$Filename = "C:\repos\website\OffgridOffice\New folder\Gillie, Stephen\OffgridOffice.md",
+		[int]$TrackWords = 10,
+		[int]$Strain = 100000,
+		$clip = (Get-Content $Filename),
+		$clipsplit = (Get-Tokenizer $clip),
+		[string[]]$IndexWords = @()
+	)
+	# $clipsplit = $clip -split " "
+	foreach ($num in (0..($TrackWords*2) )) {
+		$IndexWords += $clipsplit | Get-Random
+	}
+	$IndexWords = ($IndexWords |select -unique)[0..$TrackWords]
+	# $iws = $IndexWords -join "        - "
+	$mid = @{}
+	$sum = @{}
+	# [int]$Strain = $clipsplit.count / 10
+	# [int]$Strain = [math]::pow(10,[math]::round([math]::log($clipsplit.count,10),0))
+	Write-Host "IW - "  -nonewline
+	foreach ($iw in $indexWords) {
+		$mid.($iw) = "" | Select-Object @{n="Word";e={$iw}},@{n="PSColor";e={$PSColors.keys | get-random}},@{n="IndexLoc";e={$IdeaIndex.($iw)}},@{n="prevIndex";e={}},@{n="Diff";e={$Strain/2}},@{n="PrevDiff";e={0}},@{n="TwoPrevDiff";e={$Strain/2}}
+		$Loudness = [math]::round($clipcount / $Weights.($iw).keys.count,0)
+		Write-Host "$iw ($Loudness) - " -foregroundcolor $mid.($iw).PSColor -nonewline
+	} 	
+		write-host ""
+	$i = 0
+	While ($Strain -ge 1) {
+		$start = get-date;
+		write-host "$i - " -nonewline
+		$IdeaIndex = Get-Weights -Mode Strain -clip $clip -WeightArray $IdeaIndex -Strain $Strain;
+		# write-host "$IndexLoc - " -nonewline
+		
+		$sum.TwoPrevDiff = 0
+		$sum.PrevDiff = 0
+		$sum.Diff = 0
+		foreach ($iw in $indexWords) {
+			$mid.($iw).prevIndex = $mid.($iw).IndexLoc
+			$mid.($iw).IndexLoc = $IdeaIndex.($mid.($iw).Word);
+			$mid.($iw).TwoPrevDiff = $mid.($iw).PrevDiff
+			$mid.($iw).PrevDiff = $mid.($iw).Diff
+			$mid.($iw).Diff = $mid.($iw).IndexLoc - $mid.($iw).prevIndex
+			if ([math]::abs($mid.($iw).Diff) -lt [math]::abs($Strain)) {
+				$mid.($iw).Diff = 0
+			}
+			if ($mid.($iw).Diff + $mid.($iw).PrevDiff -ne 0) {
+				$sum.TwoPrevDiff += $mid.($iw).TwoPrevDiff
+				$sum.PrevDiff += $mid.($iw).PrevDiff
+				$sum.Diff += $mid.($iw).Diff
+			}
+			$locstrain = [math]::Round($mid.($iw).IndexLoc ,0)
+			$diffstrain = [math]::Round($mid.($iw).Diff / $Strain,2)
+			write-host "$locstrain ($($diffstrain)x) - " -nonewline -foregroundcolor $mid.($iw).PSColor
+		} 	
+
+		if (($sum.Diff -eq 0) -AND ($sum.PrevDiff -eq 0)-AND ($sum.TwoPrevDiff -eq 0)) {
+			$Strain = $Strain / 10
+		}
+		# if (($sum.Diff -ne 0) -AND ($sum.PrevDiff -ne 0)-AND ($sum.TwoPrevDiff -ne 0)) {
+			# $Strain = $Strain * 10
+		# }
+		$i++
+		$end = get-date;
+		$time = ($end - $start);
+		$formattedTime = get-date -Hour $time.Hours -Minute $time.Minutes -Second $time.Seconds -f T
+		write-host "$formattedTime"
+	}
+}
+
+<#
+Parabolic Gravity
+$weightcount = 17847
+$Iterations = [math]::Log($weightcount,2)
+$Gravity = [math]::pow(2,$Iterations) * 100
+n - g
+14 - 16384
+13 - 8192
+12 - 4096
+11 - 2048
+10 - 1024
+9 - 512
+8 - 256
+7 - 128
+6 - 64
+5 - 32
+4 - 16
+3 - 8
+2 - 4
+1 - 2
+0 - 1
+#>
+
+Function Get-GravitationalTraining {
+	Param(
+	$sentences = ((gc $NoteFiles) -split "[.] " | where {$_}),
+	$Gravity = 1,
+	[switch]$Display
+	)
+	$n,$k,$w = 0;
+	foreach ($sentence in $sentences) {$n++
+		Write-Host "Sentence $n of $($Sentences.count): $Sentence"
+		$FirstKey = "1"
+				# Write-Host "$n $f $k $w - $key $word"
+		foreach ($word in ($sentence -split " ")) {$w++
+			$weightset = @()
+			foreach ($FirstKey in ($weights.keys)) {$f++
+				$pct = $f/$weights.keys.count 
+				# write-progress -Activity "$FirstKey" -PercentComplete $pct -CurrentOperation $FirstKey -id 1
+				try {
+				foreach ($key in ($weights.($FirstKey).keys)) {$k++
+					# $pct2 = $k/($weights.($FirstKey).keys.count) / 100
+				# write-host "$key $k / $($weights.($FirstKey).keys.count) = $pct"
+					# write-progress -Activity "Keys" -PercentComplete $pct2 -CurrentOperation $key -id 2 -parentid 1
+					if ($key -eq $word) {
+						$weightset += "" | select @{n="key";e={$key}},@{n="FirstKey";e={$FirstKey}},@{n="weight";e={$weights.($FirstKey).($key)}}
+						If ($Display) {Write-Host "$n $f $k $w - $word"}
+					} # end if key
+				} # end foreach key
+				} catch {
+					write-host "error: $FirstKey"
+				}
+			} # end foreach FirstKey
+		} # end foreach word
+		$avg = ($weightset.weight | Measure-Object -Average).Average
+		$ky = $weightset.key | select -unique
+		$count = $weightset.count
+		Write-Host "$ky - Avg: $avg - Count $count"
+		If ($Display) {Write-Host "avg: $avg - ints $($weightset.FirstKey)"}
+		foreach ($setitem in $weightset) {
+			foreach ($FirstKey in ($weights.keys)) {$f++
+				foreach ($key in ($weights.($FirstKey).keys)) {$k++
+					if ($weights.($setitem.FirstKey).($setitem.key) -lt $avg) {
+						$weights.($setitem.FirstKey).($setitem.key) = $weights.($setitem.FirstKey).($setitem.key) + $Gravity
+					# Write-Host "+$Gravity " -nonewline -foregroundcolor "green"
+					} elseif ($weights.($setitem.FirstKey).($setitem.key) -gt $avg) {
+						$weights.($setitem.FirstKey).($setitem.key) = $weights.($setitem.FirstKey).($setitem.key) - $Gravity
+					# Write-Host "-$Gravity " -nonewline -foregroundcolor "red"
+					} # end if val
+					# $val = [math]::round($avg - $weights.($setitem.FirstKey).($setitem.key),0)
+					# Write-Host "$val " -nonewline
+					# Write-Host "FirstKey $($setitem.FirstKey) - key $($setitem.key) - weight $($setitem.weight) - val: $val"
+				} # end foreach key
+			} # end foreach FirstKey
+		} # end foreach setitem
+		# $fk = $weightset.FirstKey | select -unique
+		# $wt = $weightset.weight | select -unique
+		
+		# Write-Host "FirstKey $fk - key $ky - weight $wt - avg: $avg"
+		Write-Host ""
+	} # end foreach sentence
+} # end Function
+
+#Scale gravity by loudness. So that loudness 1 words gravitate faster. 
+#Scale gravity by distance. 
+#NEed to readd EOS to training set. 
+
+# Average-slamming, then logarithmic epoching.
+
+#No that's dumb
+#Make another single-dimension hash table with just the index. 
+#Train by moving 2 words closer to each other. (This can be epochal)
+#Run by doing $weights.($WordOne).($WordTwo) decision from $Index.($WordTwo)
+
+#Train until "EOF".
 
 Function Get-PredictWord {
 	Param(
@@ -497,10 +870,230 @@ Function Get-PredictWord {
 	} catch {}
 }; #end Get-PredictWord
 
+Function Get-PredictAttnWord { #Attn mode
+	Param(
+		$newword = "thrift",
+		$weightOne = "thrift",
+		$weightTwo= "store",
+		$ix = ($weights[$weightOne][$weightTwo]),
+		[switch]$Display
+	)
+	$PassThruWord = $newword
+	$sentence = "";
+	$n = 0;
+	while ($sentence -notmatch "EOS") {
+		$n++
+		$word = $newword;
+		$sentence += "$word ";
+		[string[]]$keys = $weights[$word].keys;
+		[int[]]$values = $weights[$word].values
+		$newword="";
+		$newdist = 10000000000;
+		for ($k = 0 ; $k -lt $keys.count ; $k++) { 
+			$key = $keys[$k]
+			$value = $values[$k]
+			# $dist = $value - $IdeaIndexList[$ix]
+			$dist = $value - $ix
+			#write-host "$key - $value - $dist"
+			if ([math]::Abs($dist) -lt [math]::Abs($newdist)) {
+				$newdist = $dist;
+				$newword = $key
+			}
+		}
+		if ($Display) {$sentence}
+		if ($Display) {Write-Host "(A)"}
+		if ($n -gt 25) {
+		if ($Display) {Write-Host "(B)"}
+			if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+		if ($Display) {Write-Host "(C)"}
+				Return "I don't know about $($PassThruWord)."
+			} else {
+		if ($Display) {Write-Host "(D)"}
+				$sentence = Get-Detokenizer ($sentence)
+				$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
+				Return $sentence
+			}
+		if ($Display) {Write-Host "(E)"}
+			}
+		if ($Display) {Write-Host "(F) $($Sentence.length)"}
+	}
+	if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+		if ($Display) {Write-Host "(G)"}
+		Return "I don't know about $($PassThruWord)."
+	} else {
+		if ($Display) {Write-Host "(H)"}
+		$sentence = Get-Detokenizer ($sentence)
+		$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
+		Return $sentence
+	}
+}
+
+Function Get-PredictSatinWord { #Satin mode
+	Param(
+		$weightOne = "thrift",
+		$weightTwo= ($weights.($weightOne).keys | get-random),
+		$ix = ($IdeaIndex[$weightOne]),
+		$MaxLength = 25,
+		[switch]$Display
+	)
+	$PassThruWord = $weightOne
+	$sentence = "";
+	$n = 0;
+	while ($sentence -notmatch "EOS") {
+		$n++
+		$word = $weightOne;
+		$sentence += "$word ";
+		[string[]]$keys = $weights[$word].keys;
+		[int[]]$values = $weights[$word].values
+		$weightOne="";
+		$newdist = 10000000000;
+		for ($k = 0 ; $k -lt $keys.count ; $k++) { 
+			$key = $keys[$k]
+			$value = $values[$k]
+			# $dist = $value - $IdeaIndex[$word]
+			$dist = $value - $ix
+			#write-host "$key - $value - $dist"
+			if ([math]::Abs($dist) -lt [math]::Abs($newdist)) {
+				$newdist = $dist;
+				$weightOne = $key
+			}
+		}
+		if ($Display) {$sentence}
+		if ($Display) {Write-Host "(A)"}
+		if ($n -gt $MaxLength) {
+		if ($Display) {Write-Host "(B)"}
+			if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+		if ($Display) {Write-Host "(C)"}
+				Return "I don't know about $($PassThruWord)."
+			} else {
+		if ($Display) {Write-Host "(D)"}
+				$sentence = Get-Detokenizer ($sentence)
+				$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
+				Return $sentence
+			}
+		if ($Display) {Write-Host "(E)"}
+			}
+		if ($Display) {Write-Host "(F) $($Sentence.length)"}
+	}
+	if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+		if ($Display) {Write-Host "(G)"}
+		Return "I don't know about $($PassThruWord)."
+	} else {
+		if ($Display) {Write-Host "(H)"}
+		$sentence = Get-Detokenizer ($sentence)
+		$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
+		Return $sentence
+	}
+}
+
+#Quote parens bracket etc counter, to track completion and prefer this when available. 
+
+Function Get-LoudestWord {
+	Param(
+		$word = "car",
+		$sentence = "Car engine sounds,  letting you hear each device involved.",
+		[string[]]$keys = $weights[$word].keys,
+		[int[]]$values = $weights[$word].values,
+		[switch]$Display
+	)
+	$WordOne, $WordTwo, $TheRest = $Sentence -split " "
+	$out = @();
+	for ($a = 0; $a -lt $keys.length; $a++) { 
+		$Loudness = 1 / $weights.($keys[$a]).keys.count
+
+		foreach ($sentenceSplit in ($sentence -split " ")) {
+			if ($sentenceSplit){
+				# $keys[$a]
+				if ($keys[$a] -match $sentenceSplit) {
+					# $sentenceSplit
+					$Loudness = $Loudness/50
+				} # end if key
+			} # end if word
+		} # end foreach word
+		
+		$out += "" | Select-Object @{n="Keys";e={$keys[$a]}}, @{n="Values";e={$values[$a]}}, @{n="Loudness";e={$Loudness}}
+	};
+	$out = $out | Select-Object Keys, Values, Loudness, @{n="DistanceScalar";e={[int]([math]::Abs($_.Values - $weights.($WordOne).($WordTwo)) / $_.Loudness)}} | sort DistanceScalar -Descending
+	if ($Display) {
+		Return $out
+	} else {
+		Return $out[0]
+	}
+}
+
+#Oscillate loud and quiet words by having a sentence volume, and 
+#Loudness here is basically next-word entropy
+
+#$Prompt = "What color is the car" -split " "
+#Get values -> $weightlist = $weights.eos.what, $weights.what.color, $weights.color.is, $weights.is.the, $weights.the.car
+#
+#1x1 1x2 1x3 1x4 1x5
+#2x2 2x3 2x4 2x5
+#3x3 3x4 3x5
+#4x4 4x5
+#5x5
+
+Function Get-Prompt {
+	Param(
+		$Prompt
+	)
+	$weightlist = @()
+	$Sentences = @()
+	$PromptSplit = $Prompt -split " "
+	$PromptLoudness = Get-Loudness $Prompt
+	for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
+		# for ($q = ($p +1) ; $q -lt ($PromptSplit.length) ; $q++) { This only tries the latter half of the prompt as first words, so the first word of the prompt is half-dropped.
+		for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
+			# write-host "$($PromptSplit[$p]) $($PromptSplit[$q])"
+			$weightlist += $weights.($PromptSplit[$p]).($PromptSplit[$q])
+		}
+	}
+	foreach ($Pro in $PromptSplit) {
+		# $Sentences += $weightlist | %{get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $_}
+		$Sentences += get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $PromptLoudness[0].IdeaIndex
+	}
+	$Sentences = ($Sentences | select -unique) -join " "
+	Return $Sentences
+}
+
+# Foreach key in $weights, cycle through every sentence in the corpus. Gather all words in the sentence that are in the key, find their average, and increment those lower than it and decrement those higher than it. 
+
+# "Locked Atttention" - specify a character whose number won't move. So other stuff is drawn to it, and other things are drawn to other items. For items that shoulnd't overlap, like error codes.
+
+<#
+$Clip = ""
+$NoteFiles ="c:\repos\website\OffgridOffice\New folder\Gillie, Stephen\OffgridOffice.md","C:\repos\website\www\Gillogisms.md","C:\AbductionPalace\ChillSMP.txt"
+Foreach ($NoteFile in $NoteFiles) {
+	$clip += (gc $NoteFile)
+}; #end Foreach NoteFile
+
+$c2 = Get-Tokenizer  $clip | group | sort count -Descending  -Unique
+$clipcount = $c2[0].count
+#>
+$clipcount = 7684
+# $clipcount = 688
+
+Function Get-Loudness {
+	Param(
+		[string]$a
+	)
+	$a = Get-Tokenizer $a
+	$b = $a -split " ";
+	$c = @()
+	foreach ($b2 in $b) {
+		# $c += $b2 | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$IdeaIndex.keys.count / $Weights.($_).keys.count}},@{n="IdeaIndex";e={$IdeaIndex.($_)}} 
+		$c += $b2 | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$clipcount / $Weights.($_).keys.count}},@{n="IdeaIndex";e={$IdeaIndex.($_)}}#,@{n="Weight";e={$Weights.($_)}} 
+	}
+	$ml = ($c.Loudness | Measure-Object -sum).sum;
+	# $iiv = ($c.IdeaIndex | Measure-Object -average).average;
+	$d = $c| select Word, @{n="RelativeLoudness";e={$_.Loudness / $ml}}, IdeaIndex | sort RelativeLoudness -Descending
+	return $d
+}
+
 Function Get-FourthSentence {
 	Param(
 		$Weights = $fb,
-		$WordOne = ($Weights.($enum.EOL).keys | Get-random),
+		$WordOne = ($Weights.($enum.EOS).keys | Get-random),
 		$WordTwo = ($Weights.($WordOne).keys | Get-random),
 		$MaxLength = 25,
 		[switch]$Debug
@@ -508,7 +1101,7 @@ Function Get-FourthSentence {
 	$out = "$WordOne $WordTwo "
 	$out += (Get-PredictWord $WordOne $WordTwo $Weights) + $enum.space
 	$i = 0
-	While (($out -notmatch $enum.EOL3) -AND ($i -lt $MaxLength)) {
+	While (($out -notmatch $enum.EOS3) -AND ($i -lt $MaxLength)) {
 	# for ($i = 0; $i -lt $MaxLength; $i++) {
 		$i++
 		[array]$mid = ($out -split $enum.space | where {$_.length -gt 0})
@@ -533,7 +1126,7 @@ Function Get-FourthSentence {
 Function Get-ThirdSentence {
 	Param(
 		$Weights = $fb,
-		$WordOne = ($Weights.($enum.EOL3).keys | Get-random),
+		$WordOne = ($Weights.($enum.EOS3).keys | Get-random),
 		$WordTwo = ($Weights.($WordOne).keys | Get-random),
 		$MaxLength = 25,
 		[switch]$Reverse,
@@ -545,8 +1138,8 @@ Function Get-ThirdSentence {
 	$out += (Get-PredictWord $WordOne $WordTwo $MidWeights) + $enum.space
 	$i = 0
 	if ($Debug) { Write-Host "$($MyInvocation.MyCommand.Name) i: $i out $out"}
-	While (($out -notmatch $enum.EOL3) -AND ($i -lt $MaxLength)) {
-#If it doesn't get to $enum.EOL3 before $MaxLength, dump it and start over?
+	While (($out -notmatch $enum.EOS3) -AND ($i -lt $MaxLength)) {
+#If it doesn't get to $enum.EOS3 before $MaxLength, dump it and start over?
 	# for ($i = 0; $i -lt $MaxLength; $i++) {
 		$i++
 		[array]$mid = ($out -split $enum.space | where {$_.length -gt 0})
@@ -570,8 +1163,8 @@ Function Get-ThirdSentence {
 		$out = $out -split " ";
 		$out = $out[($out.count -1)..0];
 		$out = $out -join " "
-		$out = $out -replace $enum.EOL3,""
-		$out = $out +$enum.EOL2
+		$out = $out -replace $enum.EOS3,""
+		$out = $out +$enum.EOS2
 	} else {
 	}
 	
@@ -592,7 +1185,7 @@ Function Get-CapsAndDot {
 Function Get-SentenceOld {
 	Param(
 		$Weights = $fb,
-		$WordOne = ($Weights.($enum.EOL3).keys | Get-random),
+		$WordOne = ($Weights.($enum.EOS3).keys | Get-random),
 		$MaxLength = 25,
 		[switch]$Debug
 	)
@@ -602,7 +1195,7 @@ Function Get-SentenceOld {
 	if ($Debug) { Write-Host "$($MyInvocation.MyCommand.Name) word: $word"}
 	$out += (Get-PredictWord $word  -Weights $Weights) + $enum.space;
 	if ($Debug) { Write-Host "$($MyInvocation.MyCommand.Name) out $out"}
-	While (($out -notmatch $enum.EOL3) -AND ($i -lt $MaxLength)) {
+	While (($out -notmatch $enum.EOS3) -AND ($i -lt $MaxLength)) {
 		[array]$mid = ($out -split $enum.space | where {$_.length -gt 0})
 		if ($Debug) { Write-Host "$($MyInvocation.MyCommand.Name) mid $mid"}
 		
@@ -977,7 +1570,7 @@ Function Get-BulkDeconjugation {
 			If ($line -match $currentItemConj) {
 				$Name,$varValue = $line -split " $currentItemConj "
 				$de = Get-Deconjugate $currentItemConj
-				$mid = "" | select-object @{n="Name";e={$Name}}, @{n="Value";e={$varValue}}, @{n="Pronoun";e={"I"}}, @{n="Root";e={$de.Root}}, @{n="Person";e={$de.Person}}, @{n="Tense";e={$de.Tense}}
+				$mid = "" | Select-Object @{n="Name";e={$Name}}, @{n="Value";e={$varValue}}, @{n="Pronoun";e={"I"}}, @{n="Root";e={$de.Root}}, @{n="Person";e={$de.Person}}, @{n="Tense";e={$de.Tense}}
 				$out += $mid
 			}
 		}
@@ -997,6 +1590,92 @@ Function Get-TestConjugates {
 		}
 	}
 }
+
+#ELI5 mode: Get-Summary -Article $g -OutputDetail 2 -InformativityLower 1 -InformativityUpper 2 -WordinessUpper 100 -WordinessLower 10 -OutputLength 3
+#Expert mode: Get-Summary -Article $g -OutputDetail 2 -InformativityLower 4 -InformativityUpper 12
+#$t = $s[0..5000] -join "" -replace "`n`n`n","" -split "`n`n"
+#Need to troubleshoot why it's duplicating sentences.
+Function Get-Summary {
+# $g = Get-Clipboard;$h = $g -split "`n`n";$b = $h | where {($_ -split "[.] ").length -gt 2};
+# For ($d = 0 ; $d -lt $b.count ; $d+=4) {
+# (($b[$d] -split "[.] ")[0..1]+ ($b[$d+1] -split "[.] ")[0..1] +($b[$d+2] -split "[.] ")[0..1] +($b[$d+3] -split "[.] ")[0..1]-join ". ")+".`n`n"
+#Write-Host -f green " d number  $($d)"
+# }; #end For d
+	Param(
+		$Article = (Get-Clipboard),
+		[int]$OutputDetail = 4,
+		[int]$OutputLength = 1,
+		[int]$InformativityUpper = 6,
+		[int]$InformativityLower = 2,
+		[int]$WordinessUpper = 30,
+		[int]$WordinessLower = 10
+	)
+	[string[]]$SplitArticle = $Article -split "`n`n";
+	[string[]]$Paragraphs = $SplitArticle | where {($_ -split "[.] ").length -ge $InformativityLower} | where {($_ -split "[.] ").length -le $InformativityUpper};
+	[string[]]$out = $null
+	
+	For ($p = 0 ; $p -le $Paragraphs.count ; $p+=$OutputDetail) {
+		# For ($s = 0 ; $s -le $OutputDetail ; $s++) {
+			$ParagraphSplit = ($Paragraphs[$p+$s] -split " ")
+		Write-Host "ParagraphSplit p $p s $s $ParagraphSplit"
+			$WordCount = $ParagraphSplit.length
+			if (($WordCount -gt $WordinessLower) -AND ($WordCount -lt $WordinessUpper)) {
+				$out = $out + (($Paragraphs[$p] -split "[.] ")[0..$OutputLength] )#+".`n`n"
+			}
+		# }; #end For OutputDetail
+		$out = $out  -replace "[.]\n",""
+		# $out = $out  | where {$_ -notmatch "Copyright"}
+		# $out = $out  | where {$_ -notmatch "All Rights Reserved"}
+		$out = ($out  -join ". ") +".`n`n"
+	}; #end For Paragraphs.count
+	Return $out
+}
+
+Function Get-Summary2 {
+# $g = Get-Clipboard;$h = $g -split "`n`n";$b = $h | where {($_ -split "[.] ").length -gt 2};
+# For ($d = 0 ; $d -lt $b.count ; $d+=4) {
+# (($b[$d] -split "[.] ")[0..1]+ ($b[$d+1] -split "[.] ")[0..1] +($b[$d+2] -split "[.] ")[0..1] +($b[$d+3] -split "[.] ")[0..1]-join ". ")+".`n`n"
+#Write-Host -f green " d number  $($d)"
+# }; #end For d
+	Param(
+		$Article = (Get-Clipboard),
+		[int]$Skip = 1,
+		[int]$Relevance = 2,
+		[int]$Detail= 3
+	)
+	1..100 | %{$Article = $Article -replace "`n$($_)`n","`n`n"}
+	# 1..100 | %{$Article = $Article -replace "`n$($_)`n",""}
+	"I","II""III""IIII""V" | %{$Article = $Article -replace "`n$($_)`n","`n`n"}
+	# "I","II""III""IIII""V" | %{$Article = $Article -replace "`n$($_)`n",""}
+	[string[]]$Paragraphs = $Article -split "`n`n" -replace "-`n","" -replace "`n"," " -replace "  "," "
+	# [string[]]$Paragraphs = $Article -split "`n`n" 
+	$Paragraphs = $Paragraphs | where {($_ -split "[.] ").length -ge $Relevance}
+	[string[]]$out = $null
+	
+	For ($p = 0 ; $p -lt $Paragraphs.count ; $p+=$Skip) {
+		$Sentences = $Paragraphs[$p] -split "[.] "
+		# $Sentences = $Sentences | where {$_.length -gt 2}
+		# $Sentences = $Sentences
+		$out = $out + (($Sentences)[0..$Detail] )#+".`n`n"
+		$out = ($out  -join ". ") +".`n`n" -replace "`n[.] ","`n" -replace "[.][.]","."
+		# $out += "P $P"
+		# For ($l = 0 ; $l -le $Level ; $l++) {
+		# $out += "L $l - P + L = $($P+$l)"
+		# }; #end For l
+		# $out = $out  | where {$_ -notmatch "Copyright"}
+		# $out = $out  | where {$_ -notmatch "All Rights Reserved"}
+		# $out = $out  | Select-Object -Unique
+		# $out = $out  | Where-Object {$_}
+	}; #end For d
+	Return $out
+}
+
+<# 51185 chars input
+
+$File=".\count.csv";"Level,Depth,Relevance,Count" >> $File;$n = 5;for ($a = 1 ; $a -lt $n ; $a++) { for ($b = 1 ; $b -lt $n ; $b++) { for ($c = 1 ; $c -lt $n ; $c++) { $g = Get-Summary2 -Article $text -level $a -Depth $b -Relevance $c; $g = ($g -split "").count; "$a,$b,$c,$g" >> $File } } };$x = gc $File | ConvertFrom-Csv;rm $File
+
+
+#>
 
 Function Get-HashNames {
 	Param(
@@ -1048,8 +1727,10 @@ Function Get-Setup {
 		[string[]]$NoteFiles,
 		[switch]$NoAnswers,
 		[switch]$Prev,
+		[switch]$Attn,
 		[switch]$Split
 	)
+	$SetupStart = Get-Date
 	$Clip = ""
 	Foreach ($NoteFile in $NoteFiles) {
 		if ($Split) {
@@ -1059,13 +1740,18 @@ Function Get-Setup {
 		}; #end if Split
 	}; #end Foreach NoteFile
 	
-	if ($prev) {
-		$script:weights = (Get-Weights -Mode Trivet -clip $clip )
+	if ($Attn) {
+		$script:weights = (Get-Weights -Mode Attn -clip $clip)
+		$NoAnswers = $true
 	} else {
-		$script:weights = (Get-Weights -Mode Third -clip $clip)
+		if ($prev) {
+			$script:weights = (Get-Weights -Mode Trivet -clip $clip)
+		} else {
+			$script:weights = (Get-Weights -Mode Third -clip $clip)
+		}; #end if prev
 	}; #end if prev
-	# $Infos = $weights.keys
-	$Infos = "bread","hotspot","peppers","yakima","change","socks","sun","rain","2019","site","hill","tent","wind","ranger","building","store","place","water","sun","today","on","the","at"
+	$Infos = $weights.keys
+	# $Infos = "bread","hotspot","peppers","yakima","change","socks","sun","rain","2019","site","hill","tent","wind","ranger","building","store","place","water","sun","today","on","the","at"
 	$n = 0
 	if (!($NoAnswers))  {
 		$Infos |%{
@@ -1075,7 +1761,17 @@ Function Get-Setup {
 			Get-AddInfo $_ -clip $clip
 		}
 	}
+
+	if ($Attn) {
+		$IdeaIndex = Get-Weights -Mode Satin -clip $clip -weightArray $IdeaIndex
+		Get-BulkSatinStrain -clip $clip
+	} 
+
 	$dataVar."the weather" = "zzMCPFunction Get-Weather"
+	$SetupEnd = Get-Date
+	$TotalTime = Get-Date ($SetupEnd - $SetupStart)  -f T
+	$WordCount = ($Clip -split " ").count
+	Write-Host "TML training for $WordCount words took $TotalTime hours."
 }
 
 Function Get-Answer {
@@ -1190,7 +1886,7 @@ Function Get-Paragraph {
 
 Function Get-NewThing {#Experiment involving getting the first and second words, then the "connecting tissue" between them.
 	Param(
-		$clip = (($chill -join " EOL ") + ($isms -join " EOL ") + $book),
+		$clip = (($chill -join " EOS ") + ($isms -join " EOS ") + $book),
 		$w3 = (Get-Weights -Mode Init -clip $clip)
 	)
 	$n = 0
@@ -1201,7 +1897,7 @@ Function Get-NewThing {#Experiment involving getting the first and second words,
 		$n++
 		Write-Progress -Activity "$($MyInvocation.MyCommand.Name) init table" -Status "$pc percent complete: $($d[$h]) $($d[$i])" -PercentComplete $pc -CurrentOperation $weights.($currentItem) 
 	}
-	$clip = $clip -split "EOL" -split "[.][ ]"
+	$clip = $clip -split "EOS" -split "[.][ ]"
 	# $c = $clip[1505]
 	$n = 0
 	foreach ($c in $clip) {
@@ -1260,7 +1956,7 @@ Function Get-NormalizeTenses {
 	Return $out
 }
 
-Function Get-VibeCoding {
+Function Get-LoopCoding {
 	Param(
 		$FilePath = "C:\repos\ToyLanguageModel\pass.ps1",
 		$Vibes = 10000,
@@ -1305,3 +2001,15 @@ Function Get-VibeCoding {
 		sleep ($TotalSeconds * 0.2)
 	} 
 }
+
+
+<# GTML File Format
+KV list:
+- Author
+- Version
+- Date
+- Corpus size
+Hashtables
+- weights
+- IdeaIndex
+#>
