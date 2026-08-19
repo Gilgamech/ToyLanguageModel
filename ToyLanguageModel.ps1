@@ -167,6 +167,7 @@ Generation would be prompt-seeded, then pick next words based on distance from t
 Using an array of values allows for multiple meanings to be defined. Where you're only looking for a match with one vector, not all of them. 
 #>
 
+$null = [Reflection.Assembly]::LoadWithPartialName("System.Speech")
 
 <# Directions:
 1. Run automated weight training program: 
@@ -280,9 +281,10 @@ $PunctuationEnum.aOpeningSquare = "\["
 $PunctuationEnum.aClosingSquare = "\]"
 $PunctuationEnum.aOpeningCurly = "\{"
 $PunctuationEnum.aClosingCurly = "\}"
+$PunctuationEnum.aBackSlash = "\\"
 $PunctuationEnum.aCaret = "``"
 $PunctuationEnum.aQuestionMark = "\?"
-$PunctuationEnum.aDollarSign = "`$"
+$PunctuationEnum.aDollarSign = "\$"
 
 #Caps words
 $CapsEnum = @{}
@@ -310,6 +312,7 @@ Function Get-Tokenizer {
 	); #end Param
 	$clip = $clip -replace "\\",$enum.Backslash
 	$PunctuationEnum.keys  | %{$clip = $clip -replace $PunctuationEnum.($_)," $_ "}
+	$PunctuationEnum.keys  | %{$clip = $clip -replace $PunctuationEnum.($_),$_}
 
 	if ($WeightMode -eq "Text") {
 		# $clip = $clip -replace $enum.RegexChars,$enum.RegexReplace
@@ -450,27 +453,23 @@ Function Get-Weights {
 				$Loudness = .1
 			}
 			
+				try {
 			if ($IdeaIndex.($currentItem) -lt $IdeaIndex.($next)) {
 				# $IdeaIndex.($currentItem) += $Strain * (Get-Loudness $currentItem).RelativeLoudness
 				# $IdeaIndex.($currentItem) +=  $ClipStrain / $Weights.($currentItem).keys.count
-				try {
 					[int]$IdeaIndex.($currentItem) +=  ($Strain / $Loudness)
 					# [int]$IdeaIndex.($currentItem) +=  $Strain
-				} catch {
-					write-host "lp+ $currentItem $($Weights.($currentItem).keys.count)"
-				}
 				# $IdeaIndex.($next) -= $Strain
 			} elseif ($IdeaIndex.($currentItem) -gt $IdeaIndex.($next)) {
 				# $IdeaIndex.($currentItem) -= $Strain * (Get-Loudness $currentItem).RelativeLoudness
 				# $IdeaIndex.($currentItem) -= $ClipStrain / $Weights.($currentItem).keys.count
-				try {
 					# [int]$IdeaIndex.($currentItem) -=  $Strain
 					[int]$IdeaIndex.($currentItem) -=  ($Strain / $Loudness)
+				# $IdeaIndex.($next) += $Strain
+			} # end if val
 				} catch {
 					write-host "lp- $currentItem $($Weights.($currentItem).keys.count)"
 				}
-				# $IdeaIndex.($next) += $Strain
-			} # end if val
 		
 			$pc = $i / $Length * 100
 			Write-Progress -Activity "Strain $Strain" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc 
@@ -762,16 +761,16 @@ n - g
 
 Function Get-GravitationalTraining {
 	Param(
-	$sentences = ((gc $NoteFiles) -split "[.] " | where {$_}),
+	$Sentences = ((gc $NoteFiles) -split "[.] " | where {$_}),
 	$Gravity = 1,
 	[switch]$Display
 	)
 	$n,$k,$w = 0;
-	foreach ($sentence in $sentences) {$n++
+	foreach ($Sentence in $Sentences) {$n++
 		Write-Host "Sentence $n of $($Sentences.count): $Sentence"
 		$FirstKey = "1"
 				# Write-Host "$n $f $k $w - $key $word"
-		foreach ($word in ($sentence -split " ")) {$w++
+		foreach ($word in ($Sentence -split " ")) {$w++
 			$weightset = @()
 			foreach ($FirstKey in ($weights.keys)) {$f++
 				$pct = $f/$weights.keys.count 
@@ -879,12 +878,12 @@ Function Get-PredictAttnWord { #Attn mode
 		[switch]$Display
 	)
 	$PassThruWord = $newword
-	$sentence = "";
+	$Sentence = "";
 	$n = 0;
-	while ($sentence -notmatch "EOS") {
+	while ($Sentence -notmatch "EOS") {
 		$n++
 		$word = $newword;
-		$sentence += "$word ";
+		$Sentence += "$word ";
 		[string[]]$keys = $weights[$word].keys;
 		[int[]]$values = $weights[$word].values
 		$newword="";
@@ -900,31 +899,31 @@ Function Get-PredictAttnWord { #Attn mode
 				$newword = $key
 			}
 		}
-		if ($Display) {$sentence}
+		if ($Display) {$Sentence}
 		if ($Display) {Write-Host "(A)"}
 		if ($n -gt 25) {
 		if ($Display) {Write-Host "(B)"}
-			if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+			if (($Sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($Sentence  -replace "\s"))) {
 		if ($Display) {Write-Host "(C)"}
 				Return "I don't know about $($PassThruWord)."
 			} else {
 		if ($Display) {Write-Host "(D)"}
-				$sentence = Get-Detokenizer ($sentence)
-				$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
-				Return $sentence
+				$Sentence = Get-Detokenizer ($Sentence)
+				$Sentence = $Sentence.substring(0,1).toupper() + $Sentence.substring(1,$Sentence.length-1)
+				Return $Sentence
 			}
 		if ($Display) {Write-Host "(E)"}
 			}
 		if ($Display) {Write-Host "(F) $($Sentence.length)"}
 	}
-	if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+	if (($Sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($Sentence  -replace "\s"))) {
 		if ($Display) {Write-Host "(G)"}
 		Return "I don't know about $($PassThruWord)."
 	} else {
 		if ($Display) {Write-Host "(H)"}
-		$sentence = Get-Detokenizer ($sentence)
-		$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
-		Return $sentence
+		$Sentence = Get-Detokenizer ($Sentence)
+		$Sentence = $Sentence.substring(0,1).toupper() + $Sentence.substring(1,$Sentence.length-1)
+		Return $Sentence
 	}
 }
 
@@ -937,89 +936,62 @@ Function Get-PredictSatinWord { #Satin mode
 		[switch]$Display
 	)
 	$PassThruWord = $weightOne
-	$sentence = "";
+	$Sentence = "";
 	$n = 0;
-	while ($sentence -notmatch "EOS") {
+	while ($Sentence -notmatch "EOS") {
 		$n++
 		$word = $weightOne;
-		$sentence += "$word ";
+		$Sentence += "$word ";
 		[string[]]$keys = $weights[$word].keys;
 		[int[]]$values = $weights[$word].values
 		$weightOne="";
 		$newdist = 10000000000;
 		for ($k = 0 ; $k -lt $keys.count ; $k++) { 
 			$key = $keys[$k]
+			# $value = $weights[$word].($key)
 			$value = $values[$k]
 			# $dist = $value - $IdeaIndex[$word]
+			$value = $value / (($Sentence | select-string $word -AllMatches).Matches.count + 1) 
 			$dist = $value - $ix
-			#write-host "$key - $value - $dist"
+			# write-host "$key - $value - $dist"
 			if ([math]::Abs($dist) -lt [math]::Abs($newdist)) {
 				$newdist = $dist;
 				$weightOne = $key
 			}
-		}
-		if ($Display) {$sentence}
+		};#$Sentence
+		if ($Display) {$Sentence}
 		if ($Display) {Write-Host "(A)"}
 		if ($n -gt $MaxLength) {
 		if ($Display) {Write-Host "(B)"}
-			if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+			if (($Sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($Sentence  -replace "\s"))) {
 		if ($Display) {Write-Host "(C)"}
 				Return "I don't know about $($PassThruWord)."
 			} else {
 		if ($Display) {Write-Host "(D)"}
-				$sentence = Get-Detokenizer ($sentence)
-				$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
-				Return $sentence
+				$Sentence = Get-Detokenizer ($Sentence + " eos ")
+				$Sentence = $Sentence.substring(0,1).toupper() + $Sentence.substring(1,$Sentence.length-1)
+				Return $Sentence
 			}
 		if ($Display) {Write-Host "(E)"}
 			}
 		if ($Display) {Write-Host "(F) $($Sentence.length)"}
 	}
-	if (($sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($sentence  -replace "\s"))) {
+	if (($Sentence -like ($PassThruWord + " eos")) -OR ($PassThruWord -eq ($Sentence  -replace "\s"))) {
 		if ($Display) {Write-Host "(G)"}
 		Return "I don't know about $($PassThruWord)."
 	} else {
 		if ($Display) {Write-Host "(H)"}
-		$sentence = Get-Detokenizer ($sentence)
-		$sentence = $sentence.substring(0,1).toupper() + $sentence.substring(1,$sentence.length-1)
-		Return $sentence
+		$Sentence = Get-Detokenizer ($Sentence)
+		$Sentence = $Sentence.substring(0,1).toupper() + $Sentence.substring(1,$Sentence.length-1)
+		Return $Sentence
 	}
 }
 
 #Quote parens bracket etc counter, to track completion and prefer this when available. 
 
-Function Get-LoudestWord {
-	Param(
-		$word = "car",
-		$sentence = "Car engine sounds,  letting you hear each device involved.",
-		[string[]]$keys = $weights[$word].keys,
-		[int[]]$values = $weights[$word].values,
-		[switch]$Display
-	)
-	$WordOne, $WordTwo, $TheRest = $Sentence -split " "
-	$out = @();
-	for ($a = 0; $a -lt $keys.length; $a++) { 
-		$Loudness = 1 / $weights.($keys[$a]).keys.count
+#Values aren't held in words, but in the connections between words. 
 
-		foreach ($sentenceSplit in ($sentence -split " ")) {
-			if ($sentenceSplit){
-				# $keys[$a]
-				if ($keys[$a] -match $sentenceSplit) {
-					# $sentenceSplit
-					$Loudness = $Loudness/50
-				} # end if key
-			} # end if word
-		} # end foreach word
-		
-		$out += "" | Select-Object @{n="Keys";e={$keys[$a]}}, @{n="Values";e={$values[$a]}}, @{n="Loudness";e={$Loudness}}
-	};
-	$out = $out | Select-Object Keys, Values, Loudness, @{n="DistanceScalar";e={[int]([math]::Abs($_.Values - $weights.($WordOne).($WordTwo)) / $_.Loudness)}} | sort DistanceScalar -Descending
-	if ($Display) {
-		Return $out
-	} else {
-		Return $out[0]
-	}
-}
+#Autoindexing: Give each word a number, out of 100x the corpus size or greater. Run word pairs - foreach word, modify their numbers to be closer if they're frequently seen in the text together. Such as if they're 2 apart, modify the numbers to each be 5 closer to each other. 10 apart, move them 1 closer to each other. Based on 1/n modification. It creates its own concept Index by making the words close to each other in the vast numberspace. So you ould take the distance between word and possible nextword as the probability. So that if you have "red" has 10018, and you have "car" with 10038 and "apple" with 10058, it would bring back "car". (And/or make an inverse of this the probabilty, and RNG anyway.)
 
 #Oscillate loud and quiet words by having a sentence volume, and 
 #Loudness here is basically next-word entropy
@@ -1033,7 +1005,7 @@ Function Get-LoudestWord {
 #4x4 4x5
 #5x5
 
-Function Get-Prompt {
+Function Get-InterPrompt {
 	Param(
 		$Prompt
 	)
@@ -1041,16 +1013,28 @@ Function Get-Prompt {
 	$Sentences = @()
 	$PromptSplit = $Prompt -split " "
 	$PromptLoudness = Get-Loudness $Prompt
-	for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
-		# for ($q = ($p +1) ; $q -lt ($PromptSplit.length) ; $q++) { This only tries the latter half of the prompt as first words, so the first word of the prompt is half-dropped.
-		for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
-			# write-host "$($PromptSplit[$p]) $($PromptSplit[$q])"
-			$weightlist += $weights.($PromptSplit[$p]).($PromptSplit[$q])
+	# for ($q = ($p +1) ; $q -lt ($PromptSplit.length) ; $q++) { This only tries the latter half of the prompt as first words, so the first word of the prompt is half-dropped.
+	# for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
+		# for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
+			# $weightlist += $weights.($PromptSplit[$p]).($PromptSplit[$q])
+		# }
+	# }
+	# $weightlist = $weightlist | where {$_}
+	# $weightlist = $weightlist[0..(($weightlist.count /2)-1)]
+	$PromptLoudness = $PromptLoudness[0..(($weightlist.count /2)-1)]
+	$UnknownIdeas = $PromptLoudness | where {$null -match $_.IdeaIndex}
+	if ($UnknownIdeas) {
+		$IdkJoin = $UnknownIdeas.word -join " "
+		$Sentences += "I don't know about $IdkJoin eos "
+	} else {
+		for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
+			for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
+				# $Sentences += $weightlist | %{Get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $_}
+				# $Sentences += Get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $PromptLoudness[0].IdeaIndex
+				# $Sentences += Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $PromptLoudness[0].IdeaIndex
+				$Sentences += $PromptLoudness.IdeaIndex | %{Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $_}
+			}
 		}
-	}
-	foreach ($Pro in $PromptSplit) {
-		# $Sentences += $weightlist | %{get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $_}
-		$Sentences += get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $PromptLoudness[0].IdeaIndex
 	}
 	$Sentences = ($Sentences | select -unique) -join " "
 	Return $Sentences
@@ -1069,9 +1053,13 @@ Foreach ($NoteFile in $NoteFiles) {
 
 $c2 = Get-Tokenizer  $clip | group | sort count -Descending  -Unique
 $clipcount = $c2[0].count
+#All 3:
+$clipcount = 7684 #100%
+# $clipcount = 688 #90%
+#Just 1:
 #>
-$clipcount = 7684
-# $clipcount = 688
+[int]$clipcount = 4205 #100%
+# $clipcount = 572 #90%
 
 Function Get-Loudness {
 	Param(
@@ -1089,6 +1077,86 @@ Function Get-Loudness {
 	$d = $c| select Word, @{n="RelativeLoudness";e={$_.Loudness / $ml}}, IdeaIndex | sort RelativeLoudness -Descending
 	return $d
 }
+
+Function Get-WordScore {
+	Param(
+		[string]$Sentence,
+		[string]$Prompt
+	)
+	$PromptLoudness = Get-Loudness (Get-Tokenizer $Prompt)# | where {$_.RelativeLoudness -gt .2}
+	
+	$Loudness = Get-Loudness ($Sentence -split " "| sort -Unique) 
+	# $Loudness = $Loudness | where {$_.RelativeLoudness -gt .01}  
+	$Loudness = $Loudness | select *, @{n="IndexDistanceA";e={[math]::abs($_.IdeaIndex - $PromptLoudness.IdeaIndex[0])}} 
+	if ($Loudness.IndexDistanceA -ne 0) {
+		$Loudness = $Loudness| select *, @{n="WordScore";e={10 / ($_.RelativeLoudness * $_.IndexDistanceA)}} 
+	} else {
+		$Loudness = $Loudness| select *, @{n="WordScore";e={0}} 
+	}
+	$Loudness | %{
+		if ($_.WordScore -eq "infinity") {
+			$_.WordScore = 0
+		}
+	}
+	$Loudness = $Loudness.WordScore |sort -Descending
+	Return $Loudness[0]
+}
+
+Function Ask-Enkida {
+	Param(
+		[string]$Prompt,
+		$Start = (Get-Date),
+		[switch]$SayPrompt,
+		[switch]$Display,
+		[switch]$debug,
+		[string]$PromptData = (Get-InterPrompt (Get-Tokenizer $Prompt)),
+		[string[]]$Sentences = ((Get-Tokenizer $PromptData) -join " " -split "eos"),
+		$out = @()
+	)
+	# $Loudness = Get-Loudness (Get-Tokenizer $Prompt) #| where {$_.RelativeLoudness -gt .2}
+	#Return the sentence with the highest word score.
+		
+	foreach ($Sentence in $Sentences) {
+		if ($Sentence) {
+			$WordScore = "" | Select-Object @{n="Sentence";e={$Sentence}},@{n="WordScore";e={Get-WordScore $Sentence $Prompt}};
+			$out+=$WordScore
+		}
+	}
+	if ($SayPrompt) {
+		Say-This $Prompt
+	}
+	$end = get-date
+	$sec = ((get-date $end) - (get-date $start)).TotalSeconds
+	if ($debug) {
+		$read = ($out | sort wordscore -Descending)
+		$read += "`n($sec)"
+		write-host $read
+	} else {
+		if ($Display) {
+			# (($out | sort wordscore -Descending))
+			$read = Get-Detokenizer ((($out | sort wordscore -Descending)[0].sentence + " eos ") -replace "  "," ")
+			$read += "`n($sec)"
+			write-host $read
+		} else {
+			$read = Get-Detokenizer ((($out | sort wordscore -Descending)[0].sentence + " eos ") -replace "  "," ")
+			$read += "`n($sec)"
+			Say-This $Read
+		}
+	}
+}
+
+Function Say-This {
+	#Rename to Out-Speech?
+	Param(
+		[Array]$Text = "Type something for me to say",
+		[String]$Gender = "female",
+		[String]$Age = "adult"
+	); #end Param
+	Add-Type -AssemblyName System.Speech
+	$synthesizer = New-Object -TypeName System.Speech.Synthesis.SpeechSynthesizer
+	$synthesizer.SelectVoiceByHints($Gender, $Age) 
+	$synthesizer.Speak($Text)
+}; #end Say-This
 
 Function Get-FourthSentence {
 	Param(
@@ -2013,3 +2081,125 @@ Hashtables
 - weights
 - IdeaIndex
 #>
+
+
+
+<# 
+#https://stackoverflow.com/questions/9361594/powershell-can-speak-but-can-it-write-if-i-speak
+
+$null = [Reflection.Assembly]::LoadWithPartialName("System.Speech")
+
+## Create the two main objects we need for speech recognition and synthesis
+if (!$global:SpeechModuleListener) {
+    ## For XP's sake, don't create them twice...
+    $global:SpeechModuleSpeaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
+    $global:SpeechModuleListener = New-Object System.Speech.Recognition.SpeechRecognizer
+}
+
+$script:SpeechModuleMacros = @{}
+## Add a way to turn it off
+$script:SpeechModuleMacros.Add("Stop Listening", {$script:listen = $false; Suspend-Listening})
+$script:SpeechModuleComputerName = ${env:ComputerName}
+
+function Update-SpeechCommands {
+    #.Synopsis 
+    #  Recreate the speech recognition grammar
+    #.Description
+    #  This parses out the speech module macros, 
+    #  and recreates the speech recognition grammar and semantic results, 
+    #  and then updates the SpeechRecognizer with the new grammar, 
+    #  and makes sure that the ObjectEvent is registered.
+    $choices = New-Object System.Speech.Recognition.Choices
+    foreach ($choice in $script:SpeechModuleMacros.GetEnumerator()) {
+        New-Object System.Speech.Recognition.SemanticResultValue $choice.Key, $choice.Value.ToString() |
+            ForEach-Object { $choices.Add($_.ToGrammarBuilder()) }
+    }
+
+    if ($VerbosePreference -ne "SilentlyContinue") {
+        $script:SpeechModuleMacros.Keys |
+            ForEach-Object { Write-Host"$Computer, $_" -Fore Cyan }
+    }
+
+    $builder = New-Object System.Speech.Recognition.GrammarBuilder("$Computer, ")
+    $builder.Append((New-ObjectSystem.Speech.Recognition.SemanticResultKey("Commands"), $choices.ToGrammarBuilder()))
+    $grammar = New-Object System.Speech.Recognition.Grammar $builder
+    $grammar.Name = "Power VoiceMacros"
+
+    ## Take note of the events, but only once (make sure to remove the old one)
+    Unregister-Event"SpeechModuleCommandRecognized" -ErrorAction SilentlyContinue
+    $null = Register-ObjectEvent $grammar SpeechRecognized `
+                -SourceIdentifier"SpeechModuleCommandRecognized" `
+                -Action {iex $event.SourceEventArgs.Result.Semantics.Item("Commands").Value}
+
+    $global:SpeechModuleListener.UnloadAllGrammars()
+    $global:SpeechModuleListener.LoadGrammarAsync($grammar)
+}
+
+function Add-SpeechCommands {
+    #.Synopsis
+    #  Add one or more commands to the speech-recognition macros, and update the recognition
+    #.Parameter CommandText
+    #  The string key for the command to remove
+    [CmdletBinding()]
+    Param([hashtable]$VoiceMacros,[string]$Computer=$Script:SpeechModuleComputerName)
+
+    ## Add the new macros
+    $script:SpeechModuleMacros += $VoiceMacros 
+    ## Update the default if they change it, so they only have to do that once.
+    $script:SpeechModuleComputerName = $Computer 
+    Update-SpeechCommands
+}
+
+function Remove-SpeechCommands {
+    #.Synopsis
+    #  Remove one or more command from the speech-recognition macros, and update the recognition
+    #.Parameter CommandText
+    #  The string key for the command to remove
+    Param([string[]]$CommandText)
+    foreach ($command in $CommandText) {
+        $script:SpeechModuleMacros.Remove($Command)
+    }
+    Update-SpeechCommands
+}
+
+function Clear-SpeechCommands {
+    #.Synopsis
+    #  Removes all commands from the speech-recognition macros, and update the recognition
+    #.Parameter CommandText
+    #  The string key for the command to remove
+    $script:SpeechModuleMacros = @{}
+    ## Default value: A way to turn it off
+    $script:SpeechModuleMacros.Add("Stop Listening", {Suspend-Listening})
+    Update-SpeechCommands
+}
+
+function Start-Listening {
+    #.Synopsis
+    #  Sets the SpeechRecognizer to Enabled
+    $global:SpeechModuleListener.Enabled = $true
+    Say-This "Speech Macros are $($Global:SpeechModuleListener.State)"
+    Write-Host "Speech Macros are $($Global:SpeechModuleListener.State)"
+}
+
+function Suspend-Listening {
+    #.Synopsis
+    #  Sets the SpeechRecognizer to Disabled
+    $global:SpeechModuleListener.Enabled = $false
+    Say-This "Speech Macros are disabled"
+    Write-Host "Speech Macros are disabled"
+}
+
+function Remove-SpeechXP {
+    #.Synopis
+    #  Dispose of the SpeechModuleListener and SpeechModuleSpeaker
+    $global:SpeechModuleListener.Dispose(); $global:SpeechModuleListener = $null
+    $global:SpeechModuleSpeaker.Dispose();  $global:SpeechModuleSpeaker = $null
+}
+
+Set-Alias asc Add-SpeechCommands
+Set-Alias rsc Remove-SpeechCommands
+Set-Alias csc Clear-SpeechCommands
+Set-Alias say Out-Speech
+Set-Alias listen Start-Listening
+# Export-ModuleMember -Function * -Alias * -VariableSpeechModuleListener, SpeechModuleSpeaker
+ #>
