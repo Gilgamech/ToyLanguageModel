@@ -303,6 +303,7 @@ $CapsEnum."battle violets"= "Battle Violets"
  if (!($dataVar)) {$dataVar = @{}}
  if (!($IdeaIndex)) {$IdeaIndex = @{}}
  if (!($weights)) {$weights = @{}}
+ if (!($Pre)) {$Pre = @{}}
 #endregion
 
 Function Get-Tokenizer {
@@ -438,7 +439,7 @@ Function Get-Weights {
 				Write-Host "$Mode Error: This $currentItem Next $next"
 		}
 			$pc = $i / $Length * 100
-			Write-Progress -Activity "Writing hash table" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next)
+			Write-Progress -Activity "Writing Satin table" -Status "$pc percent complete: $currentItem $next" -PercentComplete $pc -CurrentOperation $weightArray.($currentItem).($next)
 		}
 	}
 	if ("Strain" -match $mode) {
@@ -448,6 +449,7 @@ Function Get-Weights {
 			# $ClipStrain = $Strain * $clipcount
 			try {
 				$Loudness = $clipcount / $Weights.($currentItem).keys.count
+				$Loudness += $clipcount / $Pre.($currentItem).keys.count
 			} catch {
 				# write-host "pre $currentItem $($Weights.($currentItem).keys.count)"
 				$Loudness = .1
@@ -690,6 +692,7 @@ Function Get-BulkSatinStrain {
 	foreach ($iw in $indexWords) {
 		$mid.($iw) = "" | Select-Object @{n="Word";e={$iw}},@{n="PSColor";e={$PSColors.keys | get-random}},@{n="IndexLoc";e={$IdeaIndex.($iw)}},@{n="prevIndex";e={}},@{n="Diff";e={$Strain/2}},@{n="PrevDiff";e={0}},@{n="TwoPrevDiff";e={$Strain/2}}
 		$Loudness = [math]::round($clipcount / $Weights.($iw).keys.count,0)
+		$Loudness += [math]::round($clipcount / $Pre.($iw).keys.count,0)
 		Write-Host "$iw ($Loudness) - " -foregroundcolor $mid.($iw).PSColor -nonewline
 	} 	
 		write-host ""
@@ -729,6 +732,7 @@ Function Get-BulkSatinStrain {
 			# $Strain = $Strain * 10
 		# }
 		$i++
+		Get-TransferIdeasToWeights
 		$end = get-date;
 		$time = ($end - $start);
 		$formattedTime = get-date -Hour $time.Hours -Minute $time.Minutes -Second $time.Seconds -f T
@@ -948,11 +952,14 @@ Function Get-PredictSatinWord { #Satin mode
 		$newdist = 10000000000;
 		for ($k = 0 ; $k -lt $keys.count ; $k++) { 
 			$key = $keys[$k]
-			# $value = $weights[$word].($key)
 			$value = $values[$k]
-			# $dist = $value - $IdeaIndex[$word]
-			$value = $value / (($Sentence | select-string $word -AllMatches).Matches.count + 1) 
-			$dist = $value - $ix
+			try {
+				# $value = [math]::pow($value,(($Sentence | select-string $word -AllMatches).Matches.count + 1)) #Prevents repeating words.
+				$value = $value / (($Sentence | select-string $word -AllMatches).Matches.count + 1) #Prevents repeating words.
+				$dist = $value - $ix
+			} catch {
+				write-host "$word $k $key $value $Sentence"
+			}
 			# write-host "$key - $value - $dist"
 			if ([math]::Abs($dist) -lt [math]::Abs($newdist)) {
 				$newdist = $dist;
@@ -1007,12 +1014,14 @@ Function Get-PredictSatinWord { #Satin mode
 
 Function Get-InterPrompt {
 	Param(
-		$Prompt
+		$Prompt,
+		[switch]$Display
 	)
 	$weightlist = @()
 	$Sentences = @()
 	$PromptSplit = $Prompt -split " "
 	$PromptLoudness = Get-Loudness $Prompt
+	if ($Display) {$PromptLoudness}
 	# for ($q = ($p +1) ; $q -lt ($PromptSplit.length) ; $q++) { This only tries the latter half of the prompt as first words, so the first word of the prompt is half-dropped.
 	# for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
 		# for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
@@ -1021,18 +1030,21 @@ Function Get-InterPrompt {
 	# }
 	# $weightlist = $weightlist | where {$_}
 	# $weightlist = $weightlist[0..(($weightlist.count /2)-1)]
-	$PromptLoudness = $PromptLoudness[0..(($weightlist.count /2)-1)]
 	$UnknownIdeas = $PromptLoudness | where {$null -match $_.IdeaIndex}
 	if ($UnknownIdeas) {
 		$IdkJoin = $UnknownIdeas.word -join " "
 		$Sentences += "I don't know about $IdkJoin eos "
 	} else {
+		$PromptLoudness = $PromptLoudness[0..(($weightlist.count /2)-1)]
 		for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
 			for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
 				# $Sentences += $weightlist | %{Get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $_}
 				# $Sentences += Get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $PromptLoudness[0].IdeaIndex
 				# $Sentences += Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $PromptLoudness[0].IdeaIndex
-				$Sentences += $PromptLoudness.IdeaIndex | %{Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $_}
+				$Sentences += $PromptLoudness.IdeaIndex | %{
+					Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $_
+				}
+				if ($Display) {$Sentences}
 			}
 		}
 	}
@@ -1063,19 +1075,22 @@ $clipcount = 7684 #100%
 
 Function Get-Loudness {
 	Param(
-		[string]$a
+		[string]$Prompt
 	)
-	$a = Get-Tokenizer $a
-	$b = $a -split " ";
-	$c = @()
-	foreach ($b2 in $b) {
-		# $c += $b2 | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$IdeaIndex.keys.count / $Weights.($_).keys.count}},@{n="IdeaIndex";e={$IdeaIndex.($_)}} 
-		$c += $b2 | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$clipcount / $Weights.($_).keys.count}},@{n="IdeaIndex";e={$IdeaIndex.($_)}}#,@{n="Weight";e={$Weights.($_)}} 
+	$Prompt = Get-Tokenizer $Prompt
+	$PromptSplit = $Prompt -split " ";
+	$mid = @()
+	foreach ($Word in $PromptSplit) {
+		# $mid += $Word | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$IdeaIndex.keys.count / $Weights.($_).keys.count}},@{n="IdeaIndex";e={$IdeaIndex.($_)}} 
+		$WordLoudness = $clipcount / $Weights.($Word).keys.count
+		$WordLoudness += $clipcount / $Pre.($Word).keys.count
+		$mid += $Word | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$WordLoudness}},@{n="IdeaIndex";e={$IdeaIndex.($_)}}#,@{n="Weight";e={$Weights.($_)}} 
 	}
-	$ml = ($c.Loudness | Measure-Object -sum).sum;
-	# $iiv = ($c.IdeaIndex | Measure-Object -average).average;
-	$d = $c| select Word, @{n="RelativeLoudness";e={$_.Loudness / $ml}}, IdeaIndex | sort RelativeLoudness -Descending
-	return $d
+	$ml = ($mid.Loudness | Measure-Object -sum).sum;
+	# $ml = 1; #Might give better results.
+
+	$out = $mid| select Word, @{n="RelativeLoudness";e={$_.Loudness / $ml}}, IdeaIndex | sort RelativeLoudness -Descending
+	return $out
 }
 
 Function Get-WordScore {
@@ -1110,7 +1125,8 @@ Function Ask-Enkida {
 		[switch]$Display,
 		[switch]$debug,
 		[string]$PromptData = (Get-InterPrompt (Get-Tokenizer $Prompt)),
-		[string[]]$Sentences = ((Get-Tokenizer $PromptData) -join " " -split "eos"),
+		[string[]]$Sentences = ($PromptData -join " " -split "eos"),
+		# [string[]]$Sentences = ((Get-Tokenizer  $PromptData) -join " " -split "eos"), 
 		$out = @()
 	)
 	# $Loudness = Get-Loudness (Get-Tokenizer $Prompt) #| where {$_.RelativeLoudness -gt .2}
@@ -1807,9 +1823,11 @@ Function Get-Setup {
 			$clip += (gc $NoteFile)
 		}; #end if Split
 	}; #end Foreach NoteFile
+	$clip = Get-Tokenizer $clip
 	
 	if ($Attn) {
 		$script:weights = (Get-Weights -Mode Attn -clip $clip)
+		$script:Pre = Get-Weights -clip $clip -Mode Trivet -weightArray $Pre
 		$NoAnswers = $true
 	} else {
 		if ($prev) {
@@ -1818,13 +1836,13 @@ Function Get-Setup {
 			$script:weights = (Get-Weights -Mode Third -clip $clip)
 		}; #end if prev
 	}; #end if prev
-	$Infos = $weights.keys
-	# $Infos = "bread","hotspot","peppers","yakima","change","socks","sun","rain","2019","site","hill","tent","wind","ranger","building","store","place","water","sun","today","on","the","at"
+	[string[]]$Keys = $weights.keys
+	# $Keys = "bread","hotspot","peppers","yakima","change","socks","sun","rain","2019","site","hill","tent","wind","ranger","building","store","place","water","sun","today","on","the","at"
 	$n = 0
 	if (!($NoAnswers))  {
-		$Infos |%{
+		$Keys |%{
 			$n++
-			$pc = $n/$infos.count * 100
+			$pc = $n/$Keys.count * 100
 			Write-Progress -Activity "$($MyInvocation.MyCommand.Name) " -Status "Preparing answers - $pc percent complete - generating  $_" -PercentComplete $pc -CurrentOperation $_
 			Get-AddInfo $_ -clip $clip
 		}
@@ -1834,13 +1852,38 @@ Function Get-Setup {
 		$IdeaIndex = Get-Weights -Mode Satin -clip $clip -weightArray $IdeaIndex
 		Get-BulkSatinStrain -clip $clip
 	} 
-
+	
 	$dataVar."the weather" = "zzMCPFunction Get-Weather"
-	$SetupEnd = Get-Date
-	$TotalTime = Get-Date ($SetupEnd - $SetupStart)  -f T
 	$WordCount = ($Clip -split " ").count
+	$SetupEnd = Get-Date
+	$time = ($SetupEnd - $SetupStart);
+	$TotalTime = Get-Date -Hour $time.Hours -Minute $time.Minutes -Second $time.Seconds -f T
 	Write-Host "TML training for $WordCount words took $TotalTime hours."
 }
+
+Function Get-TransferIdeasToWeights {
+	$n = 0;
+	[string[]]$Keys = $Weights.keys;
+	foreach ($key in $Keys) {
+		$n++
+		[string[]]$subkeys = $weights[$key].keys
+		foreach ($subkey in $subkeys) {
+			$weights.$key.$subkey = $IdeaIndex.$subkey
+			$pct = $n/$keys.count*100
+			write-progress -Activity "copy $pct % complete" -PercentComplete $pct -CurrentOperation "copy $subkey"
+		}#end foreach subkey
+	}#end foreach key	
+}
+
+Function Get-SaveWeights {
+	$weights | Export-Clixml -Path C:\repos\ToyLanguageModel\weights.gtml
+	$pre | Export-Clixml -Path C:\repos\ToyLanguageModel\pre.gtml
+	$IdeaIndex | Export-Clixml -Path C:\repos\ToyLanguageModel\IdeaIndex.gtml
+	Compress-Archive -LiteralPath C:\repos\ToyLanguageModel\Gilgamech-17k-v0.1-GTST1\ -DestinationPath C:\repos\ToyLanguageModel\Gilgamech-17k-v0.1-GTST1.zip
+	Rename-Item -Path C:\repos\ToyLanguageModel\Gilgamech-17k-v0.1-GTST1.zip -NewName C:\repos\ToyLanguageModel\Gilgamech-17k-v0.1-GTST1.gtws
+}
+
+
 
 Function Get-Answer {
 	Param(
