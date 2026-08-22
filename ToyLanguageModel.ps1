@@ -325,25 +325,25 @@ Function Get-Weights {
 			$next = $clip[$i+1];
 			# $ClipStrain = $Strain * $clipcount
 			try {
-				$Loudness = $clipcount / $Weights.($currentItem).keys.count
-				$Loudness += $clipcount / $Pre.($currentItem).keys.count
+				$Significance = $clipcount / $Weights.($currentItem).keys.count
+				$Significance += $clipcount / $Pre.($currentItem).keys.count
 			} catch {
 				# write-host "pre $currentItem $($Weights.($currentItem).keys.count)"
-				$Loudness = .1
+				$Significance = .1
 			}
 			
 				try {
 			if ($IdeaIndex.($currentItem) -lt $IdeaIndex.($next)) {
-				# $IdeaIndex.($currentItem) += $Strain * (Get-Loudness $currentItem).RelativeLoudness
+				# $IdeaIndex.($currentItem) += $Strain * (Get-Significance $currentItem).RelativeSignificance
 				# $IdeaIndex.($currentItem) +=  $ClipStrain / $Weights.($currentItem).keys.count
-					[int]$IdeaIndex.($currentItem) +=  ($Strain / $Loudness)
+					[int]$IdeaIndex.($currentItem) +=  ($Strain / $Significance)
 					# [int]$IdeaIndex.($currentItem) +=  $Strain
 				# $IdeaIndex.($next) -= $Strain
 			} elseif ($IdeaIndex.($currentItem) -gt $IdeaIndex.($next)) {
-				# $IdeaIndex.($currentItem) -= $Strain * (Get-Loudness $currentItem).RelativeLoudness
+				# $IdeaIndex.($currentItem) -= $Strain * (Get-Significance $currentItem).RelativeSignificance
 				# $IdeaIndex.($currentItem) -= $ClipStrain / $Weights.($currentItem).keys.count
 					# [int]$IdeaIndex.($currentItem) -=  $Strain
-					[int]$IdeaIndex.($currentItem) -=  ($Strain / $Loudness)
+					[int]$IdeaIndex.($currentItem) -=  ($Strain / $Significance)
 				# $IdeaIndex.($next) += $Strain
 			} # end if val
 				} catch {
@@ -362,7 +362,7 @@ Function Get-Weights {
 				$counter += 100
 			}
 			$currentItem = $clip[$i];
-			$next = $clip[$i+1]; # * $Loudness
+			$next = $clip[$i+1]; # * $Significance
 		try {
 			$weightArray.($currentItem).($next) += $counter
 		} catch {
@@ -548,9 +548,9 @@ Function Get-BulkSatinStrain {
 	Write-Host "IW - "  -nonewline
 	foreach ($iw in $indexWords) {
 		$mid.($iw) = "" | Select-Object @{n="Word";e={$iw}},@{n="PSColor";e={$PSColors.keys | get-random}},@{n="IndexLoc";e={$IdeaIndex.($iw)}},@{n="prevIndex";e={}},@{n="Diff";e={$Strain/2}},@{n="PrevDiff";e={0}},@{n="TwoPrevDiff";e={$Strain/2}}
-		$Loudness = [math]::round($clipcount / $Weights.($iw).keys.count,0)
-		$Loudness += [math]::round($clipcount / $Pre.($iw).keys.count,0)
-		Write-Host "$iw ($Loudness) - " -foregroundcolor $mid.($iw).PSColor -nonewline
+		$Significance = [math]::round($clipcount / $Weights.($iw).keys.count,0)
+		$Significance += [math]::round($clipcount / $Pre.($iw).keys.count,0)
+		Write-Host "$iw ($Significance) - " -foregroundcolor $mid.($iw).PSColor -nonewline
 	} 	
 		write-host ""
 	$i = 0
@@ -710,7 +710,7 @@ Function Set-Answer {
 	Ask-Enkida "$WordOne $WordTwo" -Display
 }
 
-Function Get-Loudness {
+Function Get-Significance {
 	Param(
 		[string]$Prompt
 	)
@@ -718,19 +718,19 @@ Function Get-Loudness {
 	$PromptSplit = $Prompt -split " ";
 	$mid = @()
 	foreach ($Word in $PromptSplit) {
-		# $mid += $Word | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$IdeaIndex.keys.count / $Weights.($_).keys.count}},@{n="IdeaIndex";e={$IdeaIndex.($_)}} 
+		# $mid += $Word | Select-Object @{n="Word";e={$_}},@{n="Significance";e={$IdeaIndex.keys.count / $Weights.($_).keys.count}},@{n="IdeaIndex";e={$IdeaIndex.($_)}} 
 		try {
-			$WordLoudness = $clipcount / $Weights.($Word).keys.count
-			$WordLoudness += $clipcount / $Pre.($Word).keys.count
+			$WordSignificance = $clipcount / $Weights.($Word).keys.count
+			$WordSignificance += $clipcount / $Pre.($Word).keys.count
 		} catch {
-			$WordLoudness += $clipcount / 1
+			$WordSignificance += $clipcount / 1
 		}
-		$mid += $Word | Select-Object @{n="Word";e={$_}},@{n="Loudness";e={$WordLoudness}},@{n="IdeaIndex";e={$IdeaIndex.($_)}}#,@{n="Weight";e={$Weights.($_)}} 
+		$mid += $Word | Select-Object @{n="Word";e={$_}},@{n="Significance";e={$WordSignificance}},@{n="IdeaIndex";e={$IdeaIndex.($_)}}#,@{n="Weight";e={$Weights.($_)}} 
 	}
-	$ml = ($mid.Loudness | Measure-Object -sum).sum;
+	$ml = ($mid.Significance | Measure-Object -sum).sum;
 	# $ml = 1; #Might give better results.
 
-	$out = $mid| select Word, @{n="RelativeLoudness";e={$_.Loudness / $ml}}, IdeaIndex | sort RelativeLoudness -Descending
+	$out = $mid| select Word, @{n="RelativeSignificance";e={$_.Significance / $ml}}, IdeaIndex | sort RelativeSignificance -Descending
 	return $out
 }
 
@@ -739,24 +739,24 @@ Function Get-WordScore {
 		[string]$Sentence,
 		[string]$Prompt
 	)
-	# $PromptLoudness = Get-Loudness (Get-Tokenizer $Prompt)# | where {$_.RelativeLoudness -gt .2}
-	$PromptLoudness = Get-Loudness $Prompt # | where {$_.RelativeLoudness -gt .2}
+	# $PromptSignificance = Get-Significance (Get-Tokenizer $Prompt)# | where {$_.RelativeSignificance -gt .2}
+	$PromptSignificance = Get-Significance $Prompt # | where {$_.RelativeSignificance -gt .2}
 	
-	$Loudness = Get-Loudness ($Sentence -split " "| sort -Unique) 
-	# $Loudness = $Loudness | where {$_.RelativeLoudness -gt .01}  
-	$Loudness = $Loudness | select *, @{n="IndexDistanceA";e={[math]::abs($_.IdeaIndex - $PromptLoudness.IdeaIndex[0])}} 
-	if ($Loudness.IndexDistanceA -ne 0) {
-		$Loudness = $Loudness| select *, @{n="WordScore";e={10 / ($_.RelativeLoudness * $_.IndexDistanceA)}} 
+	$Significance = Get-Significance ($Sentence -split " "| sort -Unique) 
+	# $Significance = $Significance | where {$_.RelativeSignificance -gt .01}  
+	$Significance = $Significance | select *, @{n="IndexDistanceA";e={[math]::abs($_.IdeaIndex - $PromptSignificance.IdeaIndex[0])}} 
+	if ($Significance.IndexDistanceA -ne 0) {
+		$Significance = $Significance| select *, @{n="WordScore";e={10 / ($_.RelativeSignificance * $_.IndexDistanceA)}} 
 	} else {
-		$Loudness = $Loudness| select *, @{n="WordScore";e={0}} 
+		$Significance = $Significance| select *, @{n="WordScore";e={0}} 
 	}
-	$Loudness | %{
+	$Significance | %{
 		if ($_.WordScore -eq "infinity") {
 			$_.WordScore = 0
 		}
 	}
-	$Loudness = $Loudness.WordScore |sort -Descending
-	Return $Loudness[0]
+	$Significance = $Significance.WordScore |sort -Descending
+	Return $Significance[0]
 }
 
 Function Get-PredictSatinWord { #Satin mode
@@ -834,8 +834,8 @@ Function Get-InterPrompt {
 	$weightlist = @()
 	$Sentences = @()
 	$PromptSplit = $Prompt -split " "
-	$PromptLoudness = Get-Loudness $Prompt
-	if ($Display) {$PromptLoudness}
+	$PromptSignificance = Get-Significance $Prompt
+	if ($Display) {$PromptSignificance}
 	# for ($q = ($p +1) ; $q -lt ($PromptSplit.length) ; $q++) { This only tries the latter half of the prompt as first words, so the first word of the prompt is half-dropped.
 	# for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
 		# for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
@@ -844,18 +844,18 @@ Function Get-InterPrompt {
 	# }
 	# $weightlist = $weightlist | where {$_}
 	# $weightlist = $weightlist[0..(($weightlist.count /2)-1)]
-	$UnknownIdeas = $PromptLoudness | where {$null -match $_.IdeaIndex}
+	$UnknownIdeas = $PromptSignificance | where {$null -match $_.IdeaIndex}
 	if ($UnknownIdeas) {
 		$IdkJoin = $UnknownIdeas.word -join " "
 		$Sentences += "I don't know about $IdkJoin eos "
 	} else {
-		$PromptLoudness = $PromptLoudness[0..(($weightlist.count /2)-1)]
+		$PromptSignificance = $PromptSignificance[0..(($weightlist.count /2)-1)]
 		for ($p = 0 ; $p -lt ($PromptSplit.length) ; $p++) {
 			for ($q = 0 ; $q -lt ($PromptSplit.length) ; $q++) {
 				# $Sentences += $weightlist | %{Get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $_}
-				# $Sentences += Get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $PromptLoudness[0].IdeaIndex
-				# $Sentences += Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $PromptLoudness[0].IdeaIndex
-				$Sentences += $PromptLoudness.IdeaIndex | %{
+				# $Sentences += Get-PredictSatinWord ($weights.($Pro).keys | get-random) -ix $PromptSignificance[0].IdeaIndex
+				# $Sentences += Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $PromptSignificance[0].IdeaIndex
+				$Sentences += $PromptSignificance.IdeaIndex | %{
 					Get-PredictSatinWord -weightOne $PromptSplit[$p] -weightTwo $PromptSplit[$q] -ix $_
 				}
 				if ($Display) {$Sentences}
@@ -880,7 +880,7 @@ Function Ask-Enkida {
 		$out = @()
 	)
 	$read = ""
-	# $Loudness = Get-Loudness (Get-Tokenizer $Prompt) #| where {$_.RelativeLoudness -gt .2}
+	# $Significance = Get-Significance (Get-Tokenizer $Prompt) #| where {$_.RelativeSignificance -gt .2}
 	#Return the sentence with the highest word score.
 		
 	foreach ($Sentence in $Sentences) {
