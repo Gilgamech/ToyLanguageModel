@@ -1,13 +1,14 @@
 #Copyright 2026 Gilgamech Technologies
 #Author: Stephen Gillie
 #Created 5/15/2026
-#Updated 9/01/2026
+#Updated 9/10/2026
 #Notes:
-#v3.0 - Adding the Index Inference system. Can answer questions about the corpus, confirming verifiable information while refuting unverifiable information.  
-#v2.1 - Added answer setting system. Can reliably return info that has been stored.
-#v2.0 - Introducing the Satin Attention system. Because N 1-dimensional vectors in N-vector space is equal to one N-dimensional vector. And while the latter are frequently represented as floating point numbers, the one vector can be represented as a single integer in the N-dimensional idea-space. 
-#v1.2 - Vastly improved generation system.
-#v1.1 - Added rudiumentary NLP, and a knowledge engine to inspire generation. 
+# V3.1 - Bugfixes and improvemens in preparation for Signifiance.
+# v3.0 - Adding the Index Inference system. Can answer questions about the corpus, confirming verifiable information while refuting unverifiable information.  
+# v2.1 - Added answer setting system. Can reliably return info that has been stored.
+# v2.0 - Introducing the Satin Attention system. Because N 1-dimensional vectors in N-vector space is equal to one N-dimensional vector. And while the latter are frequently represented as floating point numbers, the one vector can be represented as a single integer in the N-dimensional idea-space. 
+# v1.2 - Vastly improved generation system.
+# v1.1 - Added rudiumentary NLP, and a knowledge engine to inspire generation. 
 
 #region Enums
 #Need:
@@ -92,6 +93,7 @@ $CapsEnum."battle violets"= "Battle Violets"
  if (!($dataVar)) {$dataVar = @{}}
  if (!($IdeaIndex)) {$IdeaIndex = @{}}
  if (!($weights)) {$weights = @{}}
+ if (!($w2)) {$w2 = @{}}
  if (!($Pre)) {$Pre = @{}}
  if (!($iix)) {$iix = @()}
 
@@ -148,6 +150,7 @@ Function Get-Setup {
 	if ($Attn) {
 		$script:weights = (Get-Weights -Mode Attn -clip $clip)
 		$script:Pre = Get-Weights -clip $clip -Mode Trivet -weightArray $Pre
+		$script:w2 = Get-Weights -clip $clip -Mode Third -weightArray $w2
 		$NoAnswers = $true
 	} else {
 		if ($prev) {
@@ -157,7 +160,6 @@ Function Get-Setup {
 		}; #end if prev
 	}; #end if prev
 	[string[]]$Keys = $weights.keys
-	# $Keys = "bread","hotspot","peppers","yakima","change","socks","sun","rain","2019","site","hill","tent","wind","ranger","building","store","place","water","sun","today","on","the","at"
 	$n = 0
 	if (!($NoAnswers))  {
 		$Keys |%{
@@ -170,14 +172,14 @@ Function Get-Setup {
 
 	if ($Attn) {
 		$IdeaIndex = Get-Weights -Mode Satin -clip $clip -weightArray $IdeaIndex
-		[string[]]$Keys= $weights.keys
+		[string[]]$Keys= $IdeaIndex.keys
 		for ($i=0; $i  -lt $Keys.count; $i++) {
 			$iix += "" | select @{n = "key"; e = {$Keys[$i]}},@{n = "value"; e = {$IdeaIndex.($Keys[$i])}} 
 		}
 		Get-BulkSatinStrain -clip $clip
+		$weights = $w2.clone()
+		Get-TransferIdeasToWeights
 	} 
-
-	
 	$dataVar."the weather" = "zzMCPFunction Get-Weather"
 	$WordCount = ($Clip -split " ").count
 	$SetupEnd = Get-Date
@@ -549,6 +551,7 @@ Function Save-Weights {
 	$weights | Export-Clixml -Path "$Path\weights.$Ext"
 	$w2 | Export-Clixml -Path "$Path\w2.$Ext"
 	$pre | Export-Clixml -Path "$Path\pre.$Ext"
+	$iix | Export-Clixml -Path "$Path\iix.$Ext"
 	$IdeaIndex | Export-Clixml -Path "$Path\IdeaIndex.$Ext"
 	Compress-Archive -LiteralPath "$Path\" -DestinationPath "$Path.zip"
 	try {
@@ -581,6 +584,7 @@ Function Load-Weights {
 		$script:weights = Import-Clixml -Path "$TempPath\$Name\weights.$Ext"
 		$script:w2 = Import-Clixml -Path "$TempPath\$Name\w2.$Ext"
 		$script:pre = Import-Clixml -Path "$TempPath\$Name\pre.$Ext"
+		$script:iix = Import-Clixml -Path "$TempPath\$Name\iix.$Ext"
 		$script:IdeaIndex = Import-Clixml -Path "$TempPath\$Name\IdeaIndex.$Ext"
 		Remove-Item "$TempPath\" -Recurse
 		Get-Enkida1 "orange tent" -Display
@@ -604,12 +608,12 @@ Function Get-Significance {
 		} catch {
 			$WordSignificance += $clipcount / 1
 		}
-		$mid += $Word | Select-Object @{n="Word";e={$_}},@{n="Significance";e={$WordSignificance}},@{n="IdeaIndex";e={$IdeaIndex.($_)}}#,@{n="Weight";e={$Weights.($_)}} 
+		$mid += $Word | Select-Object @{n="Word";e={$_}},@{n="IdeaIndex";e={$IdeaIndex.($_)}},@{n="Significance";e={$WordSignificance}}#,@{n="Weight";e={$Weights.($_)}} 
 	}
 	$ml = ($mid.Significance | Measure-Object -sum).sum;
 	# $ml = 1; #Might give better results.
 
-	$out = $mid| select Word, @{n="RelativeSignificance";e={$_.Significance / $ml}}, IdeaIndex | sort RelativeSignificance -Descending
+	$mid = $mid| select Word, IdeaIndex, @{n="RelativeSignificance";e={$_.Significance / $ml}}# | sort RelativeSignificance -Descending
 	return $out
 }
 
@@ -1004,5 +1008,3 @@ Function Set-Answer {
 }
 
 <#
-Take prompt and map against corups, then use significance and distance to reduce back to relevance.
-#>
